@@ -1,6 +1,6 @@
 <template>
     <div>
-        <v-navigation-drawer
+        <!-- <v-navigation-drawer
             v-model="drawer"
             app
         >
@@ -28,8 +28,8 @@
                     <v-list-item-title>Dashboard</v-list-item-title>
                 </v-list-item>
             </v-list>
-        </v-navigation-drawer>
-        <v-app-bar color="transparent" dense flat app>
+        </v-navigation-drawer> -->
+        <v-app-bar color="transparent" flat app>
             <v-app-bar-nav-icon class="hidden-sm-and-up" @click="drawer = !drawer"></v-app-bar-nav-icon>
             <v-spacer></v-spacer>
             <v-toolbar-items>

@@ -1,5 +1,5 @@
 <template>
-    <v-main class="grey lighten-4">
+    <v-main>
         <v-subheader>Dashboard</v-subheader>
         <v-container>
             <v-row>
@@ -33,6 +33,7 @@
                         </v-data-table>
                         <v-pagination
                             v-model="page"
+                            color="teal"
                             :length="pageCount"
                             :total-visible="10"
                         ></v-pagination>
@@ -49,7 +50,7 @@
                             </v-container>
                         </v-sheet>
                         <v-card-actions>
-                            <v-btn @click="userLoggedOut()" color="primary" x-large block>Log-out</v-btn>
+                            <v-btn @click="userLoggedOut()" color="teal darken-1" x-large block dark>Log-out</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-col>
