@@ -10,6 +10,9 @@ const plugins = {
                     photo: process.env.VUE_APP_PHOTO
                 }
             },
+            created() {
+                this.axios.defaults.headers.common['master-api'] = process.env.VUE_APP_URL_KEY
+            },
             computed: {
                 ...mapState([
                     'userInfo',

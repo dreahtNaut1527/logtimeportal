@@ -26,7 +26,6 @@
                                             @blur="getUserInfo()"
                                             rounded
                                             outlined
-                                            dense
                                         ></v-text-field>
                                         <v-text-field
                                             v-model="password"
@@ -36,7 +35,7 @@
                                             append-icon="mdi-lock"
                                             rounded
                                             outlined
-                                            dense
+                                            @keypress.enter="userLoggedIn()"
                                         ></v-text-field>
                                     </v-form>
                                     <v-checkbox
