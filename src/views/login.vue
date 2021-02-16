@@ -89,17 +89,34 @@ export default {
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                 if(Array.isArray(res.data)) {
                     this.employeeDetails = res.data[0]
+                } else {
+                    this.swal.fire('Sorry! :(', 'No record exists. Please contact your administrator', 'error')
                 }
                 this.loading = false
             })
         },
         userLoggedIn() {
-            if(this.md5(this.password) == this.employeeDetails.PASSWORD) {
-                this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
-                this.$store.commit('CHANGE_USER_LOGGING', true)
-                this.$router.push('/dashboard')
+            if(this.employeeDetails.TIMEIN != null && this.employeeDetails.TIMEOUT != null) {
+                this.swal.fire('Sorry! :(', 'You cannot login today. Already logged out', 'error')
             } else {
-                alert('Not okay')
+                if(!this.checkLeave()) {
+                    this.swal.fire('Sorry! :(', `You are currently on ${this.employeeDetails.LEAVEDESCRIPTION} leave`, 'error')
+                } else {
+                    if(this.md5(this.password) == this.employeeDetails.PASSWORD) {
+                        this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
+                        this.$store.commit('CHANGE_USER_LOGGING', true)
+                        this.$router.push('/dashboard')
+                    } else {
+                        this.swal.fire('Oh no!', 'Username or Password is incorrect. Please try again', 'error')
+                    }
+                }
+            }
+        },
+        checkLeave() {
+            if(this.employeeDetails.LEAVEDESCRIPTION != 'Regular Day') {
+                return false
+            } else {
+                return true
             }
         }
     }

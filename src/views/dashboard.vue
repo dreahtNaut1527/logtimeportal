@@ -144,7 +144,6 @@ export default {
         }
     },
     created() {
-        this.code = '33959'
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
         this.loadLogtime()
         this.getDuration()
@@ -152,7 +151,7 @@ export default {
     computed: {
         filterLogtime() {
             return this.logtimeData.filter(rec => {
-                return rec.EMPLCODE.includes(this.code || '')
+                return rec.EMPLCODE.includes(this.userInfo.EMPLCODE || '')
             })
         },
         filterTotalPresent() {
@@ -167,7 +166,8 @@ export default {
             return this.logtimeData.filter(rec => {
                 return (
                     rec.EMPLCODE.includes(this.userInfo.EMPLCODE) &&
-                    rec.TIMEIN == null 
+                    rec.TIMEIN == null &&
+                    rec.OTCODE == 'RD'
                 )
             })
         }
@@ -185,8 +185,8 @@ export default {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeData',
                 values: [
                     `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
-                    'HRD',
-                    'QA',
+                    this.userInfo.SHORTNAME,
+                    this.userInfo.DEPTDESC,
                     null,
                     null
                 ]
@@ -216,22 +216,22 @@ export default {
             })
         },
         getDuration() {
-            let x  = this.moment().format('YYYY-MM-DD HH:mm:ss')
-            let y = `${this.moment().format('YYYY-MM-DD')} ${this.userInfo.TIMEIN}`
-            let duration = this.moment(x).diff(y, 'hours')
+            let now  = this.moment().format('YYYY-MM-DD HH:mm:ss')
+            let then = `${this.moment().format('YYYY-MM-DD')} ${this.userInfo.TIMEIN}`
+            let duration = this.moment(now).diff(then, 'hours')
             console.log(duration)
         }
     },
     watch: {
         datenow(val) {
-            if(val >= '05:00' && val <= '10:00') {
+            if(val >= '05:00' && val <= '09:59') {
                 this.imgClock = require('../assets/morning.gif')
                 this.strGreetings = 'Good Morning'
-            } else if(val >= '10:01' && val <= '17:00') {
+            } else if(val >= '10:00' && val <= '16:59') {
                 this.imgClock = require('../assets/afternoon.gif')
                 this.strGreetings = 'Good Afternoon'
             } else {
-                this.imgClock = require('../assets/evening.gif')
+                this.imgClock = require('../assets/evening.gif')    
                 this.strGreetings = 'Good Evening'
             }
         },
