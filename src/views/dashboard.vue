@@ -8,7 +8,7 @@
                         <v-col cols="12" md="12">
                             <v-row align="center" justify="center">
                                 <v-col cols="12" md="4">
-                                    <v-card class="rounded-xl" elevation="8">
+                                    <v-card class="rounded-xl" elevation="4">
                                         <v-toolbar flat>
                                             <v-toolbar-title class="subtitle-1 font-weight-light">Present</v-toolbar-title>
                                             <v-spacer></v-spacer>
@@ -22,7 +22,7 @@
                                     </v-card>
                                 </v-col>
                                 <v-col cols="12" md="4">
-                                    <v-card class="rounded-xl" elevation="8">
+                                    <v-card class="rounded-xl" elevation="4">
                                         <v-toolbar flat>
                                             <v-toolbar-title class="subtitle-2 font-weight-light">Absent</v-toolbar-title>
                                             <v-spacer></v-spacer>
@@ -36,7 +36,7 @@
                                     </v-card>
                                 </v-col>
                                 <v-col cols="12" md="4">
-                                    <v-card class="rounded-xl" elevation="8">
+                                    <v-card class="rounded-xl" elevation="4">
                                         <v-toolbar flat>
                                             <v-toolbar-title class="subtitle-2 font-weight-light">Hours</v-toolbar-title>
                                             <v-spacer></v-spacer>
@@ -52,7 +52,7 @@
                             </v-row>    
                         </v-col>
                         <v-col cols="12" md="12">
-                            <v-sheet height="570" elevation="7" class="rounded-xl">
+                            <v-sheet height="570" elevation="8" class="rounded-xl">
                                 <v-container>
                                     <v-toolbar flat>
                                         <v-toolbar-title class="font-weight-bold">Logtime</v-toolbar-title>
@@ -73,12 +73,16 @@
                                         hide-default-footer
                                     >
                                         <template v-slot:item="props">
-                                            <tr :style="props.item.TIMEIN == null ? 'color: #b71c1c;' : ''">
-                                                <td>{{moment(props.item.LOGDATE).format('YYYY-MM-DD')}}</td>
-                                                <td>{{props.item.TIMEIN}}</td>
-                                                <td>{{props.item.TIMEOUT}}</td>
-                                                <td>{{props.item.NOHRS}}</td>
-                                                <td>{{props.item.LOGTYPE}}</td>
+                                            <tr :style="!props.item.TimeIn ? 'color: #b71c1c;' : ''">
+                                                <td>{{props.item.LogDateTime}}</td>
+                                                <td>{{!props.item.TimeIn ? '' : moment(props.item.TimeIn).format('HH:mm:ss')}}</td>
+                                                <td>{{!props.item.TimeOut ? '' : moment(props.item.TimeOut).format('HH:mm:ss')}}</td>
+                                                <td>{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
+                                                <td>
+                                                    <v-chip v-if="props.item.TimeIn" :color="props.item.LogType == 1 ? 'orange' : 'green'" dark>
+                                                        {{props.item.LogTypeDesc}}
+                                                    </v-chip>
+                                                </td>
                                             </tr>
                                         </template>
                                     </v-data-table>
@@ -118,9 +122,11 @@ export default {
     data() {
         return {
             loading: true,
+            hours: 0,
             totalHours: 0,
             pageCount: 0,
             page: 1,
+            payCode: '',
             code: '',
             datenow: '',
             dtLogtime: '',
@@ -128,11 +134,11 @@ export default {
             strGreetings: '',
             logtimeData: [],
             headers: [
-                {text: 'Log Date', value: 'LOGDATE'},
-                {text: 'Time In', value: 'TIMEIN'},
-                {text: 'Time Out', value: 'TIMEOUT'},
-                {text: 'Hours', value: 'NOHRS'},
-                {text: 'Type', value: 'LOGTYPE'}
+                {text: 'Log Date', value: 'LogDateTime'},
+                {text: 'Time In', value: 'TimeIn'},
+                {text: 'Time Out', value: 'TimeOut'},
+                {text: 'Hours', value: 'NoHrs'},
+                {text: 'Type', value: 'LogTypeDesc'}
             ],
             logOutOptions: {
                 title: 'Are you sure?',
@@ -151,30 +157,30 @@ export default {
     computed: {
         filterLogtime() {
             return this.logtimeData.filter(rec => {
-                return rec.EMPLCODE.includes(this.userInfo.EMPLCODE || '')
+                return rec.EmployeeCode.includes(this.userInfo.EmployeeCode || '')
             })
         },
         filterTotalPresent() {
             return this.logtimeData.filter(rec => {
                 return (
-                    rec.EMPLCODE.includes(this.userInfo.EMPLCODE) &&
-                    rec.TIMEIN != null 
+                    rec.EmployeeCode.includes(this.userInfo.EmployeeCode) &&
+                    rec.TimeIn != null 
                 )
             })
         },
         filterTotalAbsent() {
             return this.logtimeData.filter(rec => {
                 return (
-                    rec.EMPLCODE.includes(this.userInfo.EMPLCODE) &&
-                    rec.TIMEIN == null &&
-                    rec.OTCODE == 'RD'
+                    rec.EmployeeCode.includes(this.userInfo.EmployeeCode) &&
+                    rec.TimeIn == null &&
+                    rec.OTCode == 'RD'
                 )
             })
         }
     },
     mounted() {
         setInterval(() => {
-            this.datenow = this.moment().format('H:mm:ss A')
+            this.datenow = this.moment().format('hh:mm:ss A')
         }, 1000);
     },
     methods: {
@@ -185,8 +191,8 @@ export default {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeData',
                 values: [
                     `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
-                    this.userInfo.SHORTNAME,
-                    this.userInfo.DEPTDESC,
+                    this.userInfo.ShortName,
+                    this.userInfo.DepartmentName,
                     null,
                     null
                 ]
@@ -209,6 +215,52 @@ export default {
         userLoggedOut() {
             this.swal.fire(this.logOutOptions).then(result => {
                 if(result.isConfirmed) {
+                    this.getDuration()
+                    let body = {
+                        procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                        values: [
+                            `LT${this.moment().format('MMYYYY')}`, 
+                            this.userInfo.ShortName, 
+                            this.userInfo.IDCode,
+                            this.userInfo.EmployeeCode, 
+                            this.moment(this.userInfo.LogDateTime).format('YYYY-MM-DD'),
+                            this.userInfo.TimeIn, 
+                            this.moment().format('YYYY-MM-DD HH:mm:ss'),
+                            this.hours, 
+                            this.userInfo.Undertime, 
+                            this.userInfo.Tardiness, 
+                            this.userInfo.Overtime, 
+                            this.userInfo.ND, 
+                            this.userInfo.Shift, 
+                            this.userInfo.SW1, 
+                            1, 
+                            null, 
+                            null, 
+                            null,
+                            null, 
+                            null, 
+                            null, 
+                            this.userInfo.ND1, 
+                            this.userInfo.ND2, 
+                            this.userInfo.NoHrs1, 
+                            this.payCode,
+                            this.userInfo.DayOff,
+                            this.userInfo.OTCode,
+                            this.userInfo.Meal,
+                            this.userInfo.MealOCC,
+                            this.userInfo.PostOT,
+                            this.userInfo.Leave,
+                            this.userInfo.TransIn,
+                            this.userInfo.TransOut,
+                            this.userInfo.DepartmentCode,
+                            this.userInfo.SectionCode,
+                            this.userInfo.TeamCode,
+                            this.userInfo.DesignationCode,
+                            1
+                        ]
+                    }
+                    this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                    this.updateORALogtime()
                     this.$store.commit('CHANGE_USER_INFO', {})
                     this.$store.commit('CHANGE_USER_LOGGING', false)
                     this.$router.push("/")
@@ -217,9 +269,38 @@ export default {
         },
         getDuration() {
             let now  = this.moment().format('YYYY-MM-DD HH:mm:ss')
-            let then = `${this.moment().format('YYYY-MM-DD')} ${this.userInfo.TIMEIN}`
-            let duration = this.moment(now).diff(then, 'hours')
-            console.log(duration)
+            let then = this.userInfo.TimeIn
+            this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
+            this.payCode = this.userInfo.OTCode == 'RD' ? 'R' : 'O'
+            this.getUndertime(now)
+        },
+        getUndertime(now) {
+            let tempUnderTime = (this.moment(now).diff(this.userInfo.EndTime, 'minutes') / 60) * -1
+            if(tempUnderTime < 0) {
+                this.undertime = 0
+            } else {
+                this.undertime = tempUnderTime
+            }
+        },
+        updateORALogtime() {
+            let body = {
+                server: 'HRIS', //`HRIS${this.userInfo.ShortName}`,
+                procedureName: 'PROCUPDATELOGTIME',
+                values: [
+                    this.userInfo.EmployeeCode, 
+                    this.moment(this.userInfo.LogDateTime).format('YYYY-MM-DD'),
+                    this.userInfo.StartTime,
+                    this.userInfo.EndTime,
+                    8, 
+                    this.userInfo.SW1, 
+                    1, 
+                    this.payCode
+                ]
+            }
+            // console.log(body)
+            this.axios.post(`${this.asd_sql}/oraprocedure.php`, {data: JSON.stringify(body)}).then(res => {
+                console.log(res.data)
+            })
         }
     },
     watch: {
@@ -238,9 +319,12 @@ export default {
         logtimeData(val) {
             this.totalHours = 0
             val.forEach(rec => {
-                if(rec.EMPLCODE == this.userInfo.EMPLCODE) {
-                    this.totalHours += rec.NOHRS
+                rec.LogDateTime = this.moment(rec.LogDateTime).format('YYYY-MM-DD')
+                if(rec.EmployeeCode == this.userInfo.EmployeeCode) {
+                    this.totalHours += rec.NoHrs
                 }
+                rec.TimeIn = rec.TimeIn != null ? this.moment.utc(rec.TimeIn) : null
+                rec.TimeOut = rec.TimeOut != null ? this.moment.utc(rec.TimeOut) : null
             })
         }
     }

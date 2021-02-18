@@ -38,13 +38,6 @@
                                             @keypress.enter="userLoggedIn()"
                                         ></v-text-field>
                                     </v-form>
-                                    <v-checkbox
-                                        class="ma-0 pa-0"
-                                        color="teal"
-                                        v-model="remember"
-                                        label="Remember Me"
-                                        dense
-                                    ></v-checkbox>
                                     <v-card-actions class="ma-0 pa-0">
                                         <v-spacer></v-spacer>
                                         <v-btn class="px-7" @click="userLoggedIn()" color="teal darken-1" dark >Login</v-btn>
@@ -65,7 +58,6 @@ export default {
         return {
             valid: true,
             loading: false,
-            remember: false,
             username: '',
             password: '',
             employeeDetails: {}
@@ -89,35 +81,114 @@ export default {
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                 if(Array.isArray(res.data)) {
                     this.employeeDetails = res.data[0]
-                } else {
-                    this.swal.fire('Sorry! :(', 'No record exists. Please contact your administrator', 'error')
                 }
                 this.loading = false
             })
         },
         userLoggedIn() {
-            if(this.employeeDetails.TIMEIN != null && this.employeeDetails.TIMEOUT != null) {
-                this.swal.fire('Sorry! :(', 'You cannot login today. Already logged out', 'error')
-            } else {
-                if(!this.checkLeave()) {
-                    this.swal.fire('Sorry! :(', `You are currently on ${this.employeeDetails.LEAVEDESCRIPTION} leave`, 'error')
+            // check if record exists
+            if(this.employeeDetails != undefined) {
+                // check logtime
+                if(!this.checkLogtime()) {
+                    this.swal.fire('Sorry! :(', 'Unable to login today. Already logged out', 'error')
+                    this.clearVariables()
                 } else {
-                    if(this.md5(this.password) == this.employeeDetails.PASSWORD) {
-                        this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
-                        this.$store.commit('CHANGE_USER_LOGGING', true)
-                        this.$router.push('/dashboard')
+                    // check leave
+                    if(!this.checkLeave()) {
+                        this.swal.fire('Sorry! :(', `You are currently on ${this.employeeDetails.LeaveDesc} leave`, 'error')
+                        this.clearVariables()
                     } else {
-                        this.swal.fire('Oh no!', 'Username or Password is incorrect. Please try again', 'error')
+                        // check password
+                        if(this.md5(this.password) == this.employeeDetails.Password) {
+                            this.setTimeIn()
+                        } else {
+                            this.swal.fire('Oh no!', 'Username or Password is incorrect. Please try again', 'error')
+                        }
                     }
                 }
+            } else {
+                this.clearVariables()
+                this.swal.fire('Sorry! :(', 'No record exists. Please contact your administrator', 'error')
             }
         },
+        clearVariables() {
+            this.employeeDetails = undefined
+            this.username = ''
+            this.password = ''
+        },
         checkLeave() {
-            if(this.employeeDetails.LEAVEDESCRIPTION != 'Regular Day') {
+            if(this.employeeDetails.Leave != '0') {
                 return false
             } else {
                 return true
             }
+        },
+        checkLogtime() {
+            if(this.employeeDetails.TimeIn && this.employeeDetails.TimeOut) {
+                return false
+            } else {
+                return true
+            }
+        },
+        setTimeIn() {
+            let startShift = ''
+            let endShift = ''
+
+            // format shift for ORACLE
+            startShift = `${this.moment().format('YYYY-MM-DD')} ${this.moment.utc(this.employeeDetails.StartTime).format('HH:mm:ss')}`
+            endShift = `${this.moment().format('YYYY-MM-DD')} ${this.moment.utc(this.employeeDetails.EndTime).format('HH:mm:ss')}`
+            this.employeeDetails.StartTime = this.moment(startShift).format('YYYY-MM-DD HH:mm:ss')
+            this.employeeDetails.EndTime = this.moment(endShift).format('YYYY-MM-DD HH:mm:ss')
+            // this.employeeDetails.TimeIn = this.moment('2021-02-18 05:25:22').format('YYYY-MM-DD HH:mm:ss')
+            this.employeeDetails.TimeIn = this.moment().format('YYYY-MM-DD HH:mm:ss')
+            this.employeeDetails.SW1 = 1
+            let body = {
+                procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                values: [
+                    `LT${this.moment().format('MMYYYY')}`, 
+                    this.employeeDetails.ShortName, 
+                    `${this.employeeDetails.EmployeeCode}${this.moment().format('MMDDYYYY')}`,
+                    this.employeeDetails.EmployeeCode, 
+                    this.moment().format('YYYY-MM-DD'), 
+                    this.employeeDetails.TimeIn,
+                    null, 
+                    this.employeeDetails.NoHrs, 
+                    this.employeeDetails.Undertime, 
+                    this.employeeDetails.Tardiness, 
+                    this.employeeDetails.Overtime, 
+                    this.employeeDetails.ND, 
+                    this.employeeDetails.Shift, 
+                    this.employeeDetails.SW1, 
+                    this.employeeDetails.SW2, 
+                    null, 
+                    null, 
+                    null,
+                    null, 
+                    null, 
+                    null, 
+                    this.employeeDetails.ND1, 
+                    this.employeeDetails.ND2, 
+                    this.employeeDetails.NoHrs1, 
+                    this.employeeDetails.PayCode,
+                    this.employeeDetails.DayOff,
+                    this.employeeDetails.OTCode,
+                    this.employeeDetails.Meal,
+                    this.employeeDetails.MealOCC,
+                    this.employeeDetails.PostOT,
+                    this.employeeDetails.Leave,
+                    this.employeeDetails.TransIn,
+                    this.employeeDetails.TransOut,
+                    this.employeeDetails.DepartmentCode,
+                    this.employeeDetails.SectionCode,
+                    this.employeeDetails.TeamCode,
+                    this.employeeDetails.DesignationCode,
+                    1
+                ]
+            }
+            this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+            this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
+            this.$store.commit('CHANGE_USER_LOGGING', true)
+            this.$router.push('/dashboard')
         }
     }
 } 
