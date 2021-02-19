@@ -216,54 +216,54 @@ export default {
             this.swal.fire(this.logOutOptions).then(result => {
                 if(result.isConfirmed) {
                     this.getDuration()
-                    let body = {
-                        procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-                        values: [
-                            `LT${this.moment().format('MMYYYY')}`, 
-                            this.userInfo.ShortName, 
-                            this.userInfo.IDCode,
-                            this.userInfo.EmployeeCode, 
-                            this.moment(this.userInfo.LogDateTime).format('YYYY-MM-DD'),
-                            this.userInfo.TimeIn, 
-                            this.moment().format('YYYY-MM-DD HH:mm:ss'),
-                            this.hours, 
-                            this.userInfo.Undertime, 
-                            this.userInfo.Tardiness, 
-                            this.userInfo.Overtime, 
-                            this.userInfo.ND, 
-                            this.userInfo.Shift, 
-                            this.userInfo.SW1, 
-                            1, 
-                            null, 
-                            null, 
-                            null,
-                            null, 
-                            null, 
-                            null, 
-                            this.userInfo.ND1, 
-                            this.userInfo.ND2, 
-                            this.userInfo.NoHrs1, 
-                            this.payCode,
-                            this.userInfo.DayOff,
-                            this.userInfo.OTCode,
-                            this.userInfo.Meal,
-                            this.userInfo.MealOCC,
-                            this.userInfo.PostOT,
-                            this.userInfo.Leave,
-                            this.userInfo.TransIn,
-                            this.userInfo.TransOut,
-                            this.userInfo.DepartmentCode,
-                            this.userInfo.SectionCode,
-                            this.userInfo.TeamCode,
-                            this.userInfo.DesignationCode,
-                            1
-                        ]
-                    }
-                    this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-                    this.updateORALogtime()
-                    this.$store.commit('CHANGE_USER_INFO', {})
-                    this.$store.commit('CHANGE_USER_LOGGING', false)
-                    this.$router.push("/")
+                    // let body = {
+                    //     procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                    //     values: [
+                    //         `LT${this.moment().format('MMYYYY')}`, 
+                    //         this.userInfo.ShortName, 
+                    //         this.userInfo.IDCode,
+                    //         this.userInfo.EmployeeCode, 
+                    //         this.moment(this.userInfo.LogDateTime).format('YYYY-MM-DD'),
+                    //         this.userInfo.TimeIn, 
+                    //         this.moment().format('YYYY-MM-DD HH:mm:ss'),
+                    //         this.hours, 
+                    //         this.userInfo.Undertime, 
+                    //         this.userInfo.Tardiness, 
+                    //         this.userInfo.Overtime, 
+                    //         this.userInfo.ND, 
+                    //         this.userInfo.Shift, 
+                    //         this.userInfo.SW1, 
+                    //         1, 
+                    //         null, 
+                    //         null, 
+                    //         null,
+                    //         null, 
+                    //         null, 
+                    //         null, 
+                    //         this.userInfo.ND1, 
+                    //         this.userInfo.ND2, 
+                    //         this.userInfo.NoHrs1, 
+                    //         this.payCode,
+                    //         this.userInfo.DayOff,
+                    //         this.userInfo.OTCode,
+                    //         this.userInfo.Meal,
+                    //         this.userInfo.MealOCC,
+                    //         this.userInfo.PostOT,
+                    //         this.userInfo.Leave,
+                    //         this.userInfo.TransIn,
+                    //         this.userInfo.TransOut,
+                    //         this.userInfo.DepartmentCode,
+                    //         this.userInfo.SectionCode,
+                    //         this.userInfo.TeamCode,
+                    //         this.userInfo.DesignationCode,
+                    //         1
+                    //     ]
+                    // }
+                    // this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                    // this.updateORALogtime()
+                    // this.$store.commit('CHANGE_USER_INFO', {})
+                    // this.$store.commit('CHANGE_USER_LOGGING', false)
+                    // this.$router.push("/")
                 }
             })
         },
@@ -272,15 +272,6 @@ export default {
             let then = this.userInfo.TimeIn
             this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
             this.payCode = this.userInfo.OTCode == 'RD' ? 'R' : 'O'
-            this.getUndertime(now)
-        },
-        getUndertime(now) {
-            let tempUnderTime = (this.moment(now).diff(this.userInfo.EndTime, 'minutes') / 60) * -1
-            if(tempUnderTime < 0) {
-                this.undertime = 0
-            } else {
-                this.undertime = tempUnderTime
-            }
         },
         updateORALogtime() {
             let body = {
