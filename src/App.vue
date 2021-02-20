@@ -1,6 +1,6 @@
 <template>
     <v-app id="inspire">
-        <navdrawer v-if="userInfo.EmployeeCode != undefined" />
+        <navdrawer v-if="logtimeuserinfo.EmployeeCode != undefined" />
         <router-view />
     </v-app>
 </template>

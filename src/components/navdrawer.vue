@@ -2,10 +2,10 @@
     <v-app-bar color="transparent" hide-on-scroll fixed flat dense app>
         <v-spacer></v-spacer>
         <v-toolbar-items>
-            <v-card-text>{{userInfo.FirstName}}</v-card-text>
+            <v-card-text>{{logtimeuserinfo.FirstName}}</v-card-text>
         </v-toolbar-items>
         <v-avatar size="40">
-            <v-img :src="`${photo}/${userInfo.EmployeeCode}.jpg`"></v-img>
+            <v-img :src="`${photo}/${logtimeuserinfo.EmployeeCode}.jpg`"></v-img>
         </v-avatar>
     </v-app-bar>
 </template>

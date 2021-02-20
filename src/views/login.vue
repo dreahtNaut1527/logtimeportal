@@ -65,7 +65,6 @@ export default {
     },
     created() {
         this.$store.commit('CHANGE_USER_INFO', {})
-        this.$store.commit('CHANGE_USER_LOGGING', false)
     },
     methods: {
         getUserInfo() {
@@ -142,6 +141,8 @@ export default {
             // this.employeeDetails.TimeIn = this.moment('2021-02-18 05:25:22').format('YYYY-MM-DD HH:mm:ss')
             this.employeeDetails.TimeIn = this.moment().format('YYYY-MM-DD HH:mm:ss')
             this.employeeDetails.SW1 = 1
+            this.employeeDetails.ManualRem = '121' 
+            this.employeeDetails.ManualRemO = '121'
             let body = {
                 procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
                 values: [
@@ -164,8 +165,8 @@ export default {
                     null, 
                     null,
                     null, 
-                    null, 
-                    null, 
+                    this.employeeDetails.ManualRem, 
+                    this.employeeDetails.ManualRemO, 
                     this.employeeDetails.ND1, 
                     this.employeeDetails.ND2, 
                     this.employeeDetails.NoHrs1, 

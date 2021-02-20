@@ -157,13 +157,13 @@ export default {
     computed: {
         filterLogtime() {
             return this.logtimeData.filter(rec => {
-                return rec.EmployeeCode.includes(this.userInfo.EmployeeCode || '')
-            })
+                return rec.EmployeeCode.includes(this.logtimeuserinfo.EmployeeCode || '')
+            }).sort().reverse()
         },
         filterTotalPresent() {
             return this.logtimeData.filter(rec => {
                 return (
-                    rec.EmployeeCode.includes(this.userInfo.EmployeeCode) &&
+                    rec.EmployeeCode.includes(this.logtimeuserinfo.EmployeeCode) &&
                     rec.TimeIn != null 
                 )
             })
@@ -171,7 +171,7 @@ export default {
         filterTotalAbsent() {
             return this.logtimeData.filter(rec => {
                 return (
-                    rec.EmployeeCode.includes(this.userInfo.EmployeeCode) &&
+                    rec.EmployeeCode.includes(this.logtimeuserinfo.EmployeeCode) &&
                     rec.TimeIn == null &&
                     rec.OTCode == 'RD'
                 )
@@ -191,8 +191,8 @@ export default {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeData',
                 values: [
                     `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
-                    this.userInfo.ShortName,
-                    this.userInfo.DepartmentName,
+                    this.logtimeuserinfo.ShortName,
+                    this.logtimeuserinfo.DepartmentName,
                     null,
                     null
                 ]
@@ -216,76 +216,77 @@ export default {
             this.swal.fire(this.logOutOptions).then(result => {
                 if(result.isConfirmed) {
                     this.getDuration()
-                    // let body = {
-                    //     procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-                    //     values: [
-                    //         `LT${this.moment().format('MMYYYY')}`, 
-                    //         this.userInfo.ShortName, 
-                    //         this.userInfo.IDCode,
-                    //         this.userInfo.EmployeeCode, 
-                    //         this.moment(this.userInfo.LogDateTime).format('YYYY-MM-DD'),
-                    //         this.userInfo.TimeIn, 
-                    //         this.moment().format('YYYY-MM-DD HH:mm:ss'),
-                    //         this.hours, 
-                    //         this.userInfo.Undertime, 
-                    //         this.userInfo.Tardiness, 
-                    //         this.userInfo.Overtime, 
-                    //         this.userInfo.ND, 
-                    //         this.userInfo.Shift, 
-                    //         this.userInfo.SW1, 
-                    //         1, 
-                    //         null, 
-                    //         null, 
-                    //         null,
-                    //         null, 
-                    //         null, 
-                    //         null, 
-                    //         this.userInfo.ND1, 
-                    //         this.userInfo.ND2, 
-                    //         this.userInfo.NoHrs1, 
-                    //         this.payCode,
-                    //         this.userInfo.DayOff,
-                    //         this.userInfo.OTCode,
-                    //         this.userInfo.Meal,
-                    //         this.userInfo.MealOCC,
-                    //         this.userInfo.PostOT,
-                    //         this.userInfo.Leave,
-                    //         this.userInfo.TransIn,
-                    //         this.userInfo.TransOut,
-                    //         this.userInfo.DepartmentCode,
-                    //         this.userInfo.SectionCode,
-                    //         this.userInfo.TeamCode,
-                    //         this.userInfo.DesignationCode,
-                    //         1
-                    //     ]
-                    // }
-                    // this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                    let body = {
+                        procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                        values: [
+                            `LT${this.moment().format('MMYYYY')}`, 
+                            this.logtimeuserinfo.ShortName, 
+                            this.logtimeuserinfo.IDCode,
+                            this.logtimeuserinfo.EmployeeCode, 
+                            this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD'),
+                            this.logtimeuserinfo.TimeIn, 
+                            this.moment().format('YYYY-MM-DD HH:mm:ss'),
+                            this.hours, 
+                            this.logtimeuserinfo.Undertime, 
+                            this.logtimeuserinfo.Tardiness, 
+                            this.logtimeuserinfo.Overtime, 
+                            this.logtimeuserinfo.ND, 
+                            this.logtimeuserinfo.Shift, 
+                            this.logtimeuserinfo.SW1, 
+                            1, 
+                            null, 
+                            null, 
+                            null,
+                            null, 
+                            this.logtimeuserinfo.ManualRem, 
+                            this.logtimeuserinfo.ManualRemO, 
+                            this.logtimeuserinfo.ND1, 
+                            this.logtimeuserinfo.ND2, 
+                            this.logtimeuserinfo.NoHrs1, 
+                            this.payCode,
+                            this.logtimeuserinfo.DayOff,
+                            this.logtimeuserinfo.OTCode,
+                            this.logtimeuserinfo.Meal,
+                            this.logtimeuserinfo.MealOCC,
+                            this.logtimeuserinfo.PostOT,
+                            this.logtimeuserinfo.Leave,
+                            this.logtimeuserinfo.TransIn,
+                            this.logtimeuserinfo.TransOut,
+                            this.logtimeuserinfo.DepartmentCode,
+                            this.logtimeuserinfo.SectionCode,
+                            this.logtimeuserinfo.TeamCode,
+                            this.logtimeuserinfo.DesignationCode,
+                            1
+                        ]
+                    }
+                    this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
                     // this.updateORALogtime()
-                    // this.$store.commit('CHANGE_USER_INFO', {})
-                    // this.$store.commit('CHANGE_USER_LOGGING', false)
-                    // this.$router.push("/")
+                    this.$store.commit('CHANGE_USER_INFO', {})
+                    this.$router.push("/")
                 }
             })
         },
         getDuration() {
             let now  = this.moment().format('YYYY-MM-DD HH:mm:ss')
-            let then = this.userInfo.TimeIn
+            let then = this.logtimeuserinfo.TimeIn
             this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
-            this.payCode = this.userInfo.OTCode == 'RD' ? 'R' : 'O'
+            this.payCode = this.logtimeuserinfo.OTCode == 'RD' ? 'R' : 'O'
         },
         updateORALogtime() {
             let body = {
-                server: 'HRIS', //`HRIS${this.userInfo.ShortName}`,
+                server: process.env.NODE_ENV == 'production' ? `HRIS${this.logtimeuserinfo.ShortName}` : 'HRIS',
                 procedureName: 'PROCUPDATELOGTIME',
                 values: [
-                    this.userInfo.EmployeeCode, 
-                    this.moment(this.userInfo.LogDateTime).format('YYYY-MM-DD'),
-                    this.userInfo.StartTime,
-                    this.userInfo.EndTime,
+                    this.logtimeuserinfo.EmployeeCode, 
+                    this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD'),
+                    this.logtimeuserinfo.StartTime,
+                    this.logtimeuserinfo.EndTime,
                     8, 
-                    this.userInfo.SW1, 
+                    this.logtimeuserinfo.SW1, 
                     1, 
-                    this.payCode
+                    this.payCode,
+                    this.logtimeuserinfo.ManualRem, 
+                    this.logtimeuserinfo.ManualRemO, 
                 ]
             }
             // console.log(body)
@@ -311,7 +312,7 @@ export default {
             this.totalHours = 0
             val.forEach(rec => {
                 rec.LogDateTime = this.moment(rec.LogDateTime).format('YYYY-MM-DD')
-                if(rec.EmployeeCode == this.userInfo.EmployeeCode) {
+                if(rec.EmployeeCode == this.logtimeuserinfo.EmployeeCode) {
                     this.totalHours += rec.NoHrs
                 }
                 rec.TimeIn = rec.TimeIn != null ? this.moment.utc(rec.TimeIn) : null
