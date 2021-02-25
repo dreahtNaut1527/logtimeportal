@@ -6,8 +6,7 @@ const plugins = {
             data() {
                 return {
                     // api: process.env.VUE_APP_LOCAL_URL,
-                    // api: process.env.VUE_APP_URL,
-                    api: process.env.NODE_ENV == 'production' ? process.env.VUE_APP_URL : process.env.VUE_APP_LOCAL_URL,
+                    api: process.env.VUE_APP_URL,
                     asd_sql: process.env.VUE_APP_ASD_SQL,
                     photo: process.env.VUE_APP_PHOTO
                 }

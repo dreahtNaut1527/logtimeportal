@@ -75,7 +75,7 @@ export default {
                     `LT${this.moment().format('MMYYYY')}`,
                     this.moment().format('YYYY-MM-DD'),
                     this.username
-                ]
+                ] 
             }
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                 if(Array.isArray(res.data)) {
@@ -160,7 +160,7 @@ export default {
                     this.employeeDetails.ND, 
                     this.employeeDetails.Shift, 
                     this.employeeDetails.SW1, 
-                    this.employeeDetails.SW2, 
+                    0, 
                     null, 
                     null, 
                     null,
