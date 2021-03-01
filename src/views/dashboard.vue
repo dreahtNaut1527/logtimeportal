@@ -38,7 +38,7 @@
                                 <v-col cols="12" md="4">
                                     <v-card class="rounded-xl" elevation="4">
                                         <v-toolbar flat>
-                                            <v-toolbar-title class="subtitle-2 font-weight-light">Hours</v-toolbar-title>
+                                            <v-toolbar-title class="subtitle-2 font-weight-light">Total Hours</v-toolbar-title>
                                             <v-spacer></v-spacer>
                                             <v-avatar class="mt-n10 rounded-pill" color="#CC95C7" size="60" tile>
                                                 <v-icon x-large dark>mdi-timer-sand</v-icon>
@@ -156,7 +156,6 @@ export default {
             this.updateLogtimeData()
         } else {
             this.loadLogtime()
-            this.getDuration()
         }
     },
     computed: {
@@ -220,69 +219,75 @@ export default {
         userLoggedOut() {
             this.swal.fire(this.logOutOptions).then(result => {
                 if(result.isConfirmed) {
-                    this.getDuration()
                     this.updateLogtimeData()
                 }
             })
         },
         updateLogtimeData() {
-            let timeLogOut = this.moment().format('YYYY-MM-DD HH:mm:ss')
-            if(this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment().format('YYYY-MM-DD')) {
-                timeLogOut = `${this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD')} ${this.moment(this.logtimeuserinfo.EndTime).format('HH:mm:ss')}`
-            }
-            let body = {
-                procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-                values: [
-                    `LT${this.moment().format('MMYYYY')}`, 
-                    this.logtimeuserinfo.ShortName, 
-                    this.logtimeuserinfo.IDCode,
-                    this.logtimeuserinfo.EmployeeCode, 
-                    this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD'),
-                    this.logtimeuserinfo.TimeIn, 
-                    timeLogOut,
-                    this.hours, 
-                    this.logtimeuserinfo.Undertime, 
-                    this.logtimeuserinfo.Tardiness, 
-                    this.logtimeuserinfo.Overtime, 
-                    this.logtimeuserinfo.ND, 
-                    this.logtimeuserinfo.Shift, 
-                    this.logtimeuserinfo.SW1, 
-                    1, 
-                    null, 
-                    null, 
-                    null,
-                    null, 
-                    this.logtimeuserinfo.ManualRem, 
-                    this.logtimeuserinfo.ManualRemO, 
-                    this.logtimeuserinfo.ND1, 
-                    this.logtimeuserinfo.ND2, 
-                    this.logtimeuserinfo.NoHrs1, 
-                    this.payCode,
-                    this.logtimeuserinfo.DayOff,
-                    this.logtimeuserinfo.OTCode,
-                    this.logtimeuserinfo.Meal,
-                    this.logtimeuserinfo.MealOCC,
-                    this.logtimeuserinfo.PostOT,
-                    this.logtimeuserinfo.Leave,
-                    this.logtimeuserinfo.TransIn,
-                    this.logtimeuserinfo.TransOut,
-                    this.logtimeuserinfo.DepartmentCode,
-                    this.logtimeuserinfo.SectionCode,
-                    this.logtimeuserinfo.TeamCode,
-                    this.logtimeuserinfo.DesignationCode,
-                    1
-                ]
-            }
-            this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-            // this.updateORALogtime()
-            this.$store.commit('CHANGE_USER_INFO', {})
-            this.$router.push("/")
-        },
-        getDuration() {
-            let now  = this.moment().format('YYYY-MM-DD HH:mm:ss')
-            let then = this.logtimeuserinfo.TimeIn
-            this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
-            this.payCode = this.logtimeuserinfo.OTCode == 'RD' ? 'R' : 'O'
+            let serverData = {}
+            //Get Server Date Time
+            this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
+                serverData = res.data
+                
+                //Compute durationz
+                let now  = this.moment(serverData.SERVERDATETIME).format('YYYY-MM-DD HH:mm:ss')
+                let then = this.moment.utc(this.logtimeuserinfo.TimeIn).format('YYYY-MM-DD HH:mm:ss')
+                this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
+                this.payCode = this.logtimeuserinfo.OTCode == 'RD' ? 'R' : 'O'
+
+                let timeLogOut = this.moment(serverData.SERVERDATETIME).format('YYYY-MM-DD HH:mm:ss')
+                if(this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment(serverData.SERVERDATETIME).format('YYYY-MM-DD')) {
+                    timeLogOut = `${this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD')} ${this.moment(this.logtimeuserinfo.EndTime).format('HH:mm:ss')}`
+                }
+                let body = {
+                    procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                    values: [
+                        `LT${this.moment().format('MMYYYY')}`, 
+                        this.logtimeuserinfo.ShortName, 
+                        this.logtimeuserinfo.IDCode,
+                        this.logtimeuserinfo.EmployeeCode, 
+                        this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD'),
+                        this.logtimeuserinfo.TimeIn, 
+                        timeLogOut,
+                        this.hours, 
+                        this.logtimeuserinfo.Undertime, 
+                        this.logtimeuserinfo.Tardiness, 
+                        this.logtimeuserinfo.Overtime, 
+                        this.logtimeuserinfo.ND, 
+                        this.logtimeuserinfo.Shift, 
+                        this.logtimeuserinfo.SW1, 
+                        1, 
+                        null, 
+                        null, 
+                        null,
+                        null, 
+                        this.logtimeuserinfo.ManualRem, 
+                        this.logtimeuserinfo.ManualRemO, 
+                        this.logtimeuserinfo.ND1, 
+                        this.logtimeuserinfo.ND2, 
+                        this.logtimeuserinfo.NoHrs1, 
+                        this.payCode,
+                        this.logtimeuserinfo.DayOff,
+                        this.logtimeuserinfo.OTCode,
+                        this.logtimeuserinfo.Meal,
+                        this.logtimeuserinfo.MealOCC,
+                        this.logtimeuserinfo.PostOT,
+                        this.logtimeuserinfo.Leave,
+                        this.logtimeuserinfo.TransIn,
+                        this.logtimeuserinfo.TransOut,
+                        this.logtimeuserinfo.DepartmentCode,
+                        this.logtimeuserinfo.SectionCode,
+                        this.logtimeuserinfo.TeamCode,
+                        this.logtimeuserinfo.DesignationCode,
+                        1
+                    ]
+                }
+                // console.log(body)
+                this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                // this.updateORALogtime()
+                this.$store.commit('CHANGE_USER_INFO', {})
+                this.$router.push("/")
+            })
         },
         updateORALogtime() {
             let body = {
@@ -313,7 +318,7 @@ export default {
             if(time >= '05:00' && time <= '09:00') {
                 this.imgClock = require('../assets/morning.gif')
                 this.strGreetings = 'Good Morning'
-            } else if(time >= '10:00' && time <= '16:59') {
+            } else if(time >= '09:01' && time <= '16:59') {
                 this.imgClock = require('../assets/afternoon.gif')
                 this.strGreetings = 'Good Afternoon'
             } else {
