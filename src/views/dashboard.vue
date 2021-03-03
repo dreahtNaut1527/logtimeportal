@@ -229,7 +229,7 @@ export default {
             this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
                 serverData = res.data
                 
-                //Compute durationz
+                //Compute duration
                 let now  = this.moment(serverData.SERVERDATETIME).format('YYYY-MM-DD HH:mm:ss')
                 let then = this.moment.utc(this.logtimeuserinfo.TimeIn).format('YYYY-MM-DD HH:mm:ss')
                 this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
@@ -282,9 +282,8 @@ export default {
                         1
                     ]
                 }
-                // console.log(body)
                 this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-                // this.updateORALogtime()
+                // // this.updateORALogtime()
                 this.$store.commit('CHANGE_USER_INFO', {})
                 this.$router.push("/")
             })

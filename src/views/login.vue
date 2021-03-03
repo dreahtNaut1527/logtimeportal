@@ -99,12 +99,13 @@ export default {
                     } else {
                         // check password
                         if(this.md5(this.password) == this.employeeDetails.Password) {
-                            if(!this.checkLogtime()) {
+                            if(!this.employeeDetails.TimeIn && !this.employeeDetails.TimeOut) {
                                 this.setTimeIn()
+                            } else {
+                                this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
+                                this.$store.commit('CHANGE_USER_LOGGING', true)
+                                this.$router.push('/dashboard')
                             }
-                            this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
-                            this.$store.commit('CHANGE_USER_LOGGING', true)
-                            this.$router.push('/dashboard')
                         } else {
                             this.swal.fire('Oh no!', 'Username or Password is incorrect. Please try again', 'error')
                         }
@@ -130,8 +131,6 @@ export default {
         checkLogtime() {
             if((this.employeeDetails.TimeIn && this.employeeDetails.TimeOut)) {
                 return false
-            } else if((this.employeeDetails.TimeIn && !this.employeeDetails.TimeOut)) {
-                return true
             } else {
                 return true
             }
@@ -144,9 +143,11 @@ export default {
             //Get Server Date Time
             this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
                 serverData = res.data
+
                 // format shift for ORACLE
                 startShift = `${this.moment().format('YYYY-MM-DD')} ${this.moment.utc(this.employeeDetails.StartTime).format('HH:mm:ss')}`
                 endShift = `${this.moment().format('YYYY-MM-DD')} ${this.moment.utc(this.employeeDetails.EndTime).format('HH:mm:ss')}`
+
                 this.employeeDetails.StartTime = this.moment(startShift).format('YYYY-MM-DD HH:mm:ss')
                 this.employeeDetails.EndTime = this.moment(endShift).format('YYYY-MM-DD HH:mm:ss')
                 // this.employeeDetails.TimeIn = this.moment('2021-02-18 05:25:22').format('YYYY-MM-DD HH:mm:ss')
@@ -199,6 +200,9 @@ export default {
                 }
                 // console.log(body)
                 this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
+                this.$store.commit('CHANGE_USER_LOGGING', true)
+                this.$router.push('/dashboard')
             })
         }
     }
