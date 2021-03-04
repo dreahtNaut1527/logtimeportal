@@ -306,9 +306,7 @@ export default {
                 ]
             }
             // console.log(body)
-            this.axios.post(`${this.asd_sql}/oraprocedure.php`, {data: JSON.stringify(body)}).then(res => {
-                console.log(res.data)
-            })
+            this.axios.post(`${this.asd_sql}/oraprocedure.php`, {data: JSON.stringify(body)})
         }
     },
     watch: {
