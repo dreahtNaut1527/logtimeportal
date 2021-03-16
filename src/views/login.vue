@@ -84,7 +84,7 @@ export default {
                 this.loading = false
             })
         },
-        userLoggedIn() {
+        userLoggedIn() { 
             // check if record exists
             if(this.employeeDetails != undefined) {
                 // check logtime
