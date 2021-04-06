@@ -13,7 +13,8 @@ export default new Vuex.Store({
     navDrawerVal: false,
     emplcode: '',
     isEmpEdit: false,
-    isConnect: true
+    isConnect: true,
+    serverDateTime: ''
   },
   plugins: [
     createPersistedState() 
@@ -42,6 +43,9 @@ export default new Vuex.Store({
     },
     CHANGE_CONNECTION: (state, data) => {
       state.isConnect = data
+    },
+    CHANGE_SERVERDATETTIME: (state, data) => {
+      state.serverDateTime = data
     }
   },
   actions: {

@@ -23,7 +23,8 @@ const plugins = {
                      'navDrawerVal',
                      'emplcode',
                      'isEmpEdit',
-                     'isConnect'
+                     'isConnect',
+                     'serverDateTime'
                 ])
             },
             methods: {
@@ -35,7 +36,8 @@ const plugins = {
                      'CHANGE_NAVDRAWER',
                      'CHANGE_EMPLCODE',
                      'CHANGE_EMP_EDIT',
-                     'CHANGE_CONNECTION'
+                     'CHANGE_CONNECTION',
+                     'CHANGE_SERVERDATETTIME'
                 ]),
                 // getWeather() {
                 //     // let url = "https://maps.googleapis.com/maps/api/geocode/json?address=Cavite&key=AIzaSyCuugDMliUtuYZ1tT2PZbgB_LMvOYi0wFU"

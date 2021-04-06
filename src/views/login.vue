@@ -23,7 +23,6 @@
                                             color="teal"
                                             label="Username"
                                             append-icon="mdi-account"
-                                            @blur="getUserInfo()"
                                             rounded
                                             outlined
                                         ></v-text-field>
@@ -35,12 +34,12 @@
                                             append-icon="mdi-lock"
                                             rounded
                                             outlined
-                                            @keypress.enter="userLoggedIn()"
+                                            @keypress.enter="getUserInfo()"
                                         ></v-text-field>
                                     </v-form>
                                     <v-card-actions class="ma-0 pa-0">
                                         <v-spacer></v-spacer>
-                                        <v-btn class="px-7" @click="userLoggedIn()" color="teal darken-1" dark >Login</v-btn>
+                                        <v-btn class="px-7" @click="getUserInfo()" color="teal darken-1" dark >Login</v-btn>
                                     </v-card-actions>
                                 </v-container>
                             </v-col>
@@ -65,14 +64,15 @@ export default {
     },
     created() {
         this.$store.commit('CHANGE_USER_INFO', {})
+        this.$store.commit('CHANGE_USER_LOGGING', false)
+        this.$store.commit('CHANGE_SERVERDATETTIME', '')
     },
     methods: {
         getUserInfo() {
-            this.loading = true
+            this.loading = true 
             let body = {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
                 values: [
-                    `LT${this.moment().format('MMYYYY')}`,
                     this.moment().format('YYYY-MM-DD'),
                     this.username
                 ] 
@@ -80,6 +80,7 @@ export default {
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                 if(Array.isArray(res.data)) {
                     this.employeeDetails = res.data[0]
+                    this.userLoggedIn()
                 }
                 this.loading = false
             })
@@ -99,13 +100,11 @@ export default {
                     } else {
                         // check password
                         if(this.md5(this.password) == this.employeeDetails.Password) {
-                            if(!this.employeeDetails.TimeIn && !this.employeeDetails.TimeOut) {
-                                this.setTimeIn()
-                            } else {
-                                this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
-                                this.$store.commit('CHANGE_USER_LOGGING', true)
-                                this.$router.push('/dashboard')
-                            }
+                            // if(!this.employeeDetails.TimeIn && !this.employeeDetails.TimeOut) {
+                            //     this.setTimeIn()
+                            // } else {
+                            // }
+                            this.setTimeIn()
                         } else {
                             this.swal.fire('Oh no!', 'Username or Password is incorrect. Please try again', 'error')
                         }
@@ -143,6 +142,7 @@ export default {
             //Get Server Date Time
             this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
                 serverData = res.data
+                this.$store.commit('CHANGE_SERVERDATETTIME', serverData.SERVERDATETIME)
 
                 // format shift for ORACLE
                 startShift = `${this.moment().format('YYYY-MM-DD')} ${this.moment.utc(this.employeeDetails.StartTime).format('HH:mm:ss')}`
@@ -150,8 +150,8 @@ export default {
 
                 this.employeeDetails.StartTime = this.moment(startShift).format('YYYY-MM-DD HH:mm:ss')
                 this.employeeDetails.EndTime = this.moment(endShift).format('YYYY-MM-DD HH:mm:ss')
-                // this.employeeDetails.TimeIn = this.moment('2021-02-18 05:25:22').format('YYYY-MM-DD HH:mm:ss')
-                this.employeeDetails.TimeIn = serverData.SERVERDATETIME
+                // this.employeeDetails.TimeIn = this.moment('2021-04-06 05:25:22').format('YYYY-MM-DD HH:mm:ss')
+                this.employeeDetails.TimeIn = this.serverDateTime
                 this.employeeDetails.SW1 = 1
                 this.employeeDetails.ManualRem = '121' 
                 this.employeeDetails.ManualRemO = '121'
@@ -160,9 +160,9 @@ export default {
                     values: [
                         `LT${this.moment().format('MMYYYY')}`, 
                         this.employeeDetails.ShortName, 
-                        `${this.employeeDetails.EmployeeCode}${this.moment(serverData.SERVERDATETIME).format('MMDDYYYY')}`,
+                        `${this.employeeDetails.EmployeeCode}${this.moment(this.serverDateTime).format('MMDDYYYY')}`,
                         this.employeeDetails.EmployeeCode, 
-                        this.moment(serverData.SERVERDATETIME).format('YYYY-MM-DD'), 
+                        this.moment(this.serverDateTime).format('YYYY-MM-DD'), 
                         this.employeeDetails.TimeIn,
                         null, 
                         this.employeeDetails.NoHrs, 
@@ -198,11 +198,15 @@ export default {
                         1
                     ]
                 }
-                // console.log(body)
-                this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                console.log(body)
+                // this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
                 this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
                 this.$store.commit('CHANGE_USER_LOGGING', true)
-                this.$router.push('/dashboard')
+                if(this.employeeDetails.UserLevel == 0) {
+                    this.$router.push('/dashboard')
+                } else {
+                    this.$router.push('/dashboardleaders')
+                }
             })
         }
     }

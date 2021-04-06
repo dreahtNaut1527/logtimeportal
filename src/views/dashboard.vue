@@ -104,7 +104,7 @@
                         <v-sheet height="300">
                             <v-container class="fill-height">
                                 <v-card-text class="text-center">
-                                    <v-card-text class="font-weight-bold display-1">{{datenow}}</v-card-text>
+                                    <v-card-text class="font-weight-bold display-1">{{moment(datenow).format('h:mm:ss A')}}</v-card-text>
                                 </v-card-text>
                             </v-container>
                         </v-sheet>
@@ -151,6 +151,7 @@ export default {
         }
     },
     created() {
+        this.datenow = this.serverDateTime
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
         if(this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment().format('YYYY-MM-DD')) {
             this.updateLogtimeData()
@@ -184,7 +185,8 @@ export default {
     },
     mounted() {
         setInterval(() => {
-            this.datenow = this.moment().format('hh:mm:ss A')
+            this.datenow = this.moment(this.datenow).add(1, 'seconds')
+            this.$store.commit('CHANGE_SERVERDATETTIME', this.datenow)
         }, 1000);
     },
     methods: {
@@ -224,69 +226,65 @@ export default {
             })
         },
         updateLogtimeData() {
-            let serverData = {}
-            //Get Server Date Time
-            this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
-                serverData = res.data
-                
-                //Compute duration
-                let now  = this.moment(serverData.SERVERDATETIME).format('YYYY-MM-DD HH:mm:ss')
-                let then = this.moment.utc(this.logtimeuserinfo.TimeIn).format('YYYY-MM-DD HH:mm:ss')
-                this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
-                this.payCode = this.logtimeuserinfo.OTCode == 'RD' ? 'R' : 'O'
+            //Compute duration
+            let now  = this.moment(this.serverDateTime).format('YYYY-MM-DD HH:mm:ss')
+            let then = this.moment.utc(this.logtimeuserinfo.TimeIn).format('YYYY-MM-DD HH:mm:ss')
+            this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
+            this.payCode = this.logtimeuserinfo.OTCode == 'RD' ? 'R' : 'O'
 
-                let timeLogOut = this.moment(serverData.SERVERDATETIME).format('YYYY-MM-DD HH:mm:ss')
-                if(this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment(serverData.SERVERDATETIME).format('YYYY-MM-DD')) {
-                    timeLogOut = `${this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD')} ${this.moment(this.logtimeuserinfo.EndTime).format('HH:mm:ss')}`
-                }
-                let body = {
-                    procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-                    values: [
-                        `LT${this.moment().format('MMYYYY')}`, 
-                        this.logtimeuserinfo.ShortName, 
-                        this.logtimeuserinfo.IDCode,
-                        this.logtimeuserinfo.EmployeeCode, 
-                        this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD'),
-                        this.logtimeuserinfo.TimeIn, 
-                        timeLogOut,
-                        this.hours, 
-                        this.logtimeuserinfo.Undertime, 
-                        this.logtimeuserinfo.Tardiness, 
-                        this.logtimeuserinfo.Overtime, 
-                        this.logtimeuserinfo.ND, 
-                        this.logtimeuserinfo.Shift, 
-                        this.logtimeuserinfo.SW1, 
-                        1, 
-                        null, 
-                        null, 
-                        null,
-                        null, 
-                        this.logtimeuserinfo.ManualRem, 
-                        this.logtimeuserinfo.ManualRemO, 
-                        this.logtimeuserinfo.ND1, 
-                        this.logtimeuserinfo.ND2, 
-                        this.logtimeuserinfo.NoHrs1, 
-                        this.payCode,
-                        this.logtimeuserinfo.DayOff,
-                        this.logtimeuserinfo.OTCode,
-                        this.logtimeuserinfo.Meal,
-                        this.logtimeuserinfo.MealOCC,
-                        this.logtimeuserinfo.PostOT,
-                        this.logtimeuserinfo.Leave,
-                        this.logtimeuserinfo.TransIn,
-                        this.logtimeuserinfo.TransOut,
-                        this.logtimeuserinfo.DepartmentCode,
-                        this.logtimeuserinfo.SectionCode,
-                        this.logtimeuserinfo.TeamCode,
-                        this.logtimeuserinfo.DesignationCode,
-                        1
-                    ]
-                }
-                this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-                // // this.updateORALogtime()
-                this.$store.commit('CHANGE_USER_INFO', {})
-                this.$router.push("/")
-            })
+            let timeLogOut = this.moment(this.serverDateTime).format('YYYY-MM-DD HH:mm:ss')
+            if(this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment(this.serverDateTime).format('YYYY-MM-DD')) {
+                timeLogOut = `${this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD')} ${this.moment(this.logtimeuserinfo.EndTime).format('HH:mm:ss')}`
+            }
+            let body = {
+                procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                values: [
+                    `LT${this.moment().format('MMYYYY')}`, 
+                    this.logtimeuserinfo.ShortName, 
+                    this.logtimeuserinfo.IDCode,
+                    this.logtimeuserinfo.EmployeeCode, 
+                    this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD'),
+                    this.logtimeuserinfo.TimeIn, 
+                    timeLogOut,
+                    this.hours, 
+                    this.logtimeuserinfo.Undertime, 
+                    this.logtimeuserinfo.Tardiness, 
+                    this.logtimeuserinfo.Overtime, 
+                    this.logtimeuserinfo.ND, 
+                    this.logtimeuserinfo.Shift, 
+                    this.logtimeuserinfo.SW1, 
+                    1, 
+                    null, 
+                    null, 
+                    null,
+                    null, 
+                    this.logtimeuserinfo.ManualRem, 
+                    this.logtimeuserinfo.ManualRemO, 
+                    this.logtimeuserinfo.ND1, 
+                    this.logtimeuserinfo.ND2, 
+                    this.logtimeuserinfo.NoHrs1, 
+                    this.payCode,
+                    this.logtimeuserinfo.DayOff,
+                    this.logtimeuserinfo.OTCode,
+                    this.logtimeuserinfo.Meal,
+                    this.logtimeuserinfo.MealOCC,
+                    this.logtimeuserinfo.PostOT,
+                    this.logtimeuserinfo.Leave,
+                    this.logtimeuserinfo.TransIn,
+                    this.logtimeuserinfo.TransOut,
+                    this.logtimeuserinfo.DepartmentCode,
+                    this.logtimeuserinfo.SectionCode,
+                    this.logtimeuserinfo.TeamCode,
+                    this.logtimeuserinfo.DesignationCode,
+                    1
+                ]
+            }
+            console.log(body)
+            // this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+            // // this.updateORALogtime()
+            this.$store.commit('CHANGE_USER_INFO', {})
+            this.$store.commit('CHANGE_SERVERDATETTIME', '')
+            this.$router.push("/")
         },
         updateORALogtime() {
             let body = {

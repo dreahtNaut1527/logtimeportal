@@ -2,6 +2,7 @@ module.exports = {
   "transpileDependencies": [
     "vuetify"
   ],
+  productionSourceMap: false,
   devServer: {
     host: '0.0.0.0',
     port: '1003', //name of port
