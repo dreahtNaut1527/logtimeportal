@@ -98,6 +98,7 @@
 export default {
     data() {
         return {
+            dialog: false,
             loading: true,
             pageCount: 0,
             page: 1,

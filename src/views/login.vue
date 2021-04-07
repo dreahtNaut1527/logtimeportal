@@ -48,6 +48,12 @@
                 </v-col>
             </v-row>
         </v-container>
+        <v-overlay :value="loading">
+            <v-progress-circular
+                indeterminate
+                size="64"
+            ></v-progress-circular>
+        </v-overlay>
     </v-main>
 </template>
 
@@ -69,7 +75,6 @@ export default {
     },
     methods: {
         getUserInfo() {
-            this.loading = true 
             let body = {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
                 values: [
@@ -82,7 +87,6 @@ export default {
                     this.employeeDetails = res.data[0]
                     this.userLoggedIn()
                 }
-                this.loading = false
             })
         },
         userLoggedIn() { 
@@ -135,6 +139,7 @@ export default {
             }
         },
         setTimeIn() {
+            this.loading = true
             let serverData = {}
             let startShift = ''
             let endShift = ''
@@ -200,6 +205,7 @@ export default {
                 }
                 console.log(body)
                 // this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                this.loading = false
                 this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
                 this.$store.commit('CHANGE_USER_LOGGING', true)
                 if(this.employeeDetails.UserLevel == 0) {
