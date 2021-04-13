@@ -104,11 +104,7 @@ export default {
                     } else {
                         // check password
                         if(this.md5(this.password) == this.employeeDetails.Password) {
-                            // if(!this.employeeDetails.TimeIn && !this.employeeDetails.TimeOut) {
-                            //     this.setTimeIn()
-                            // } else {
-                            // }
-                            this.setTimeIn()
+                            this.setTimeIn(this.employeeDetails)
                         } else {
                             this.swal.fire('Oh no!', 'Username or Password is incorrect. Please try again', 'error')
                         }
@@ -138,82 +134,109 @@ export default {
                 return true
             }
         },
-        setTimeIn() {
-            this.loading = true
+        setTimeIn(value) {
+            let dtToday = null
             let serverData = {}
-            let startShift = ''
-            let endShift = ''
+            let startShift = this.moment.utc(value.StartTime)
+            let endShift = this.moment.utc(value.EndTime)
+            this.loading = true
 
-            //Get Server Date Time
             this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
+                //Get Server Date Time
                 serverData = res.data
                 this.$store.commit('CHANGE_SERVERDATETTIME', serverData.SERVERDATETIME)
+                
+                dtToday = this.moment(this.serverDateTime)
 
                 // format shift for ORACLE
-                startShift = `${this.moment().format('YYYY-MM-DD')} ${this.moment.utc(this.employeeDetails.StartTime).format('HH:mm:ss')}`
-                endShift = `${this.moment().format('YYYY-MM-DD')} ${this.moment.utc(this.employeeDetails.EndTime).format('HH:mm:ss')}`
-
-                this.employeeDetails.StartTime = this.moment(startShift).format('YYYY-MM-DD HH:mm:ss')
-                this.employeeDetails.EndTime = this.moment(endShift).format('YYYY-MM-DD HH:mm:ss')
-                // this.employeeDetails.TimeIn = this.moment('2021-04-06 05:25:22').format('YYYY-MM-DD HH:mm:ss')
-                this.employeeDetails.TimeIn = this.serverDateTime
-                this.employeeDetails.SW1 = 1
-                this.employeeDetails.ManualRem = '121' 
-                this.employeeDetails.ManualRemO = '121'
-                let body = {
-                    procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-                    values: [
-                        `LT${this.moment().format('MMYYYY')}`, 
-                        this.employeeDetails.ShortName, 
-                        `${this.employeeDetails.EmployeeCode}${this.moment(this.serverDateTime).format('MMDDYYYY')}`,
-                        this.employeeDetails.EmployeeCode, 
-                        this.moment(this.serverDateTime).format('YYYY-MM-DD'), 
-                        this.employeeDetails.TimeIn,
-                        null, 
-                        this.employeeDetails.NoHrs, 
-                        this.employeeDetails.Undertime, 
-                        this.employeeDetails.Tardiness, 
-                        this.employeeDetails.Overtime, 
-                        this.employeeDetails.ND, 
-                        this.employeeDetails.Shift, 
-                        this.employeeDetails.SW1, 
-                        0, 
-                        null, 
-                        null, 
-                        null,
-                        null, 
-                        this.employeeDetails.ManualRem, 
-                        this.employeeDetails.ManualRemO, 
-                        this.employeeDetails.ND1, 
-                        this.employeeDetails.ND2, 
-                        this.employeeDetails.NoHrs1, 
-                        this.employeeDetails.PayCode,
-                        this.employeeDetails.DayOff,
-                        this.employeeDetails.OTCode,
-                        this.employeeDetails.Meal,
-                        this.employeeDetails.MealOCC,
-                        this.employeeDetails.PostOT,
-                        this.employeeDetails.Leave,
-                        this.employeeDetails.TransIn,
-                        this.employeeDetails.TransOut,
-                        this.employeeDetails.DepartmentCode,
-                        this.employeeDetails.SectionCode,
-                        this.employeeDetails.TeamCode,
-                        this.employeeDetails.DesignationCode,
-                        1
-                    ]
+                value.StartTime = `${dtToday.format('YYYY-MM-DD')} ${startShift.format('HH:mm:ss')}`
+                value.EndTime = `${dtToday.format('YYYY-MM-DD')} ${endShift.format('HH:mm:ss')}`
+                
+                // Check if employee already logged in 
+                if(!value.TimeIn && value.UserLevel == 0) {                
+                    let body = {
+                        procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                        values: [
+                            `LT${dtToday.format('MMYYYY')}`, 
+                            value.ShortName, 
+                            `${value.EmployeeCode}${dtToday.format('MMDDYYYY')}`,
+                            value.EmployeeCode, 
+                            dtToday.format('YYYY-MM-DD'), 
+                            this.serverDateTime, // Time In
+                            value.TimeOut, 
+                            value.NoHrs, 
+                            value.Undertime, 
+                            this.setTardiness(this.serverDateTime, value.StartTime), //Tardiness, 
+                            value.Overtime, 
+                            value.ND, 
+                            value.Shift, 
+                            1, // SW1
+                            value.SW2,
+                            value.UserAcct, 
+                            value.UserAcctO, 
+                            value.UserTime, 
+                            value.UserTimeO, 
+                            '121', // Manual Rem
+                            value.ManualRemO, 
+                            value.ND1, 
+                            value.ND2, 
+                            value.NoHrs1, 
+                            value.PayCode,
+                            value.DayOff,
+                            value.OTCode,
+                            1, // Meal
+                            value.MealOCC,
+                            value.PostOT,
+                            value.Leave,
+                            value.TransIn,
+                            value.TransOut,
+                            value.DepartmentCode,
+                            value.SectionCode,
+                            value.TeamCode,
+                            value.DesignationCode,
+                            1
+                        ]
+                    }
+                    // console.log(value)
+                    this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
                 }
-                console.log(body)
-                // this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
                 this.loading = false
-                this.$store.commit('CHANGE_USER_INFO', this.employeeDetails)
+                this.$store.commit('CHANGE_USER_INFO', value)
                 this.$store.commit('CHANGE_USER_LOGGING', true)
-                if(this.employeeDetails.UserLevel == 0) {
+                if(value.UserLevel == 0) {
                     this.$router.push('/dashboard')
                 } else {
                     this.$router.push('/dashboardleaders')
                 }
             })
+        },
+        setTardiness(timeIn, startTime) {
+            let duration = null
+            let timeInVal = this.moment(timeIn, 'YYYY-MM-DD HH:mm:ss')
+            let startTimeVal = this.moment(startTime, 'YYYY-MM-DD HH:mm:ss')
+            duration = this.calculateDates(startTimeVal, timeInVal)
+            return duration.hours
+        }, 
+        calculateDates(date1, date2) {
+
+            let years = date1.diff(date2, 'year');
+            date2.add(years, 'years');
+
+            let months = date1.diff(date2, 'months');
+            date2.add(months, 'months');
+
+            let days = date1.diff(date2, 'days');
+            date2.add(days, 'days');
+
+            let hours = date1.diff(date2, 'hours', true);
+            date2.add(hours, 'hours');
+
+            let minutes = date1.diff(date2, 'minutes', true);
+            date2.add(minutes, 'minutes');
+
+            let seconds = date1.diff(date2, 'seconds');
+
+            return {years, months, days, hours, minutes, seconds};
         }
     }
 } 

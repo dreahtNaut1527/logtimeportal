@@ -32,7 +32,11 @@ router.beforeEach((to, from, next) => {
   if(to.path !== '/' && store.state.logtimeuserinfo.EmployeeCode == undefined) {
     next('/') // Goto Login page
   } else if(to.path === '/' && store.state.logtimeuserinfo.EmployeeCode != undefined) { 
-    next('/dashboard')
+    if (store.state.logtimeuserinfo.UserLevel == 0) {
+      next('/dashboard')
+    } else {
+      next('/dashboardleaders')
+    }
   } else {
     next()
   }

@@ -185,7 +185,7 @@ export default {
     },
     mounted() {
         setInterval(() => {
-            this.datenow = this.moment(this.datenow).add(1, 'seconds')
+            this.datenow = this.moment.utc(this.datenow).add(1, 'seconds')
             this.$store.commit('CHANGE_SERVERDATETTIME', this.datenow)
         }, 1000);
     },
@@ -279,33 +279,12 @@ export default {
                     1
                 ]
             }
-            console.log(body)
-            // this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-            // // this.updateORALogtime()
+            // console.log(body)
+            this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
             this.$store.commit('CHANGE_USER_INFO', {})
             this.$store.commit('CHANGE_SERVERDATETTIME', '')
             this.$router.push("/")
         },
-        updateORALogtime() {
-            let body = {
-                server: process.env.NODE_ENV == 'production' ? `HRIS${this.logtimeuserinfo.ShortName}` : 'HRIS',
-                procedureName: 'PROCUPDATELOGTIME',
-                values: [
-                    this.logtimeuserinfo.EmployeeCode, 
-                    this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD'),
-                    this.logtimeuserinfo.StartTime,
-                    this.logtimeuserinfo.EndTime,
-                    8, 
-                    this.logtimeuserinfo.SW1, 
-                    1, 
-                    this.payCode,
-                    this.logtimeuserinfo.ManualRem, 
-                    this.logtimeuserinfo.ManualRemO, 
-                ]
-            }
-            // console.log(body)
-            this.axios.post(`${this.asd_sql}/oraprocedure.php`, {data: JSON.stringify(body)})
-        }
     },
     watch: {
         datenow() {

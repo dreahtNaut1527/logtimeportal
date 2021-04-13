@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar color="transparent" hide-on-scroll fixed flat dense app>
+    <v-app-bar color="transparent" hide-on-scroll fixed app>
         <v-spacer></v-spacer>
         <v-avatar size="40">
             <v-img :src="`${photo}/${logtimeuserinfo.EmployeeCode}.jpg`"></v-img>
@@ -7,7 +7,7 @@
         <v-toolbar-items>
             <v-card-text>{{logtimeuserinfo.FirstName}}</v-card-text>
             <v-spacer></v-spacer>
-            <v-btn @click="userLoggedOut()" icon><v-icon>mdi-logout</v-icon></v-btn>
+            <v-btn v-if="logtimeuserinfo.UserLevel != 0" @click="userLoggedOut()" icon><v-icon>mdi-logout</v-icon></v-btn>
         </v-toolbar-items>
     </v-app-bar>
 </template>
