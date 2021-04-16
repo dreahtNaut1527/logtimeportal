@@ -15,9 +15,11 @@
                     color="teal"
                     v-bind="attrs"
                     v-on="on"
+                    hide-details
                     readonly
                     dense
                     outlined
+                    clearable
                ></v-text-field>
           </template>
           <v-time-picker

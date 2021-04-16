@@ -77,7 +77,10 @@
                                                 <td>{{props.item.LogDateTime}}</td>
                                                 <td>{{!props.item.TimeIn ? '' : moment(props.item.TimeIn).format('HH:mm:ss')}}</td>
                                                 <td>{{!props.item.TimeOut ? '' : moment(props.item.TimeOut).format('HH:mm:ss')}}</td>
-                                                <td>{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
+                                                <td class="text-center">{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
+                                                <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Tardiness}}</td>
+                                                <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Undertime}}</td>
+                                                <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Overtime}}</td>
                                                 <td>
                                                     <v-chip v-if="props.item.TimeIn" :color="props.item.LogType == 1 ? 'orange' : 'green'" dark>
                                                         {{props.item.LogTypeDesc}}
@@ -123,11 +126,9 @@ export default {
     data() {
         return {
             loading: true,
-            hours: 0,
             totalHours: 0,
             pageCount: 0,
             page: 1,
-            payCode: '',
             code: '',
             datenow: '',
             dtLogtime: '',
@@ -139,6 +140,9 @@ export default {
                 {text: 'Time In', value: 'TimeIn'},
                 {text: 'Time Out', value: 'TimeOut'},
                 {text: 'Hours', value: 'NoHrs'},
+                {text: 'Tardiness', value: 'Tardiness'},
+                {text: 'Undertime', value: 'Undertime'},
+                {text: 'Overtime', value: 'Overtime'},
                 {text: 'Type', value: 'LogTypeDesc'}
             ],
             logOutOptions: {
@@ -221,61 +225,61 @@ export default {
         userLoggedOut() {
             this.swal.fire(this.logOutOptions).then(result => {
                 if(result.isConfirmed) {
-                    this.updateLogtimeData()
+                    this.updateLogtimeData(this.logtimeuserinfo)
                 }
             })
         },
-        updateLogtimeData() {
+        updateLogtimeData(value) {
             //Compute duration
-            let now  = this.moment(this.serverDateTime).format('YYYY-MM-DD HH:mm:ss')
-            let then = this.moment.utc(this.logtimeuserinfo.TimeIn).format('YYYY-MM-DD HH:mm:ss')
-            this.hours = this.moment(now).diff(then, 'hours') >= 8 ? 8 : this.moment(now).diff(then, 'hours')
-            this.payCode = this.logtimeuserinfo.OTCode == 'RD' ? 'R' : 'O'
+            let timeInVal = this.moment.utc(value.TimeIn)
+            let timeOutVal  = this.moment.utc(this.serverDateTime)
+            
+            let duration = this.calculateDates(timeOutVal, timeInVal)
 
-            let timeLogOut = this.moment(this.serverDateTime).format('YYYY-MM-DD HH:mm:ss')
-            if(this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment(this.serverDateTime).format('YYYY-MM-DD')) {
-                timeLogOut = `${this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD')} ${this.moment(this.logtimeuserinfo.EndTime).format('HH:mm:ss')}`
+            let timeLogOut = timeOutVal.format('YYYY-MM-DD HH:mm:ss')
+            if(this.moment(value.LogDateTime).format('YYYY-MM-DD') != timeOutVal.format('YYYY-MM-DD')) {
+                timeLogOut = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.moment(value.EndTime).format('HH:mm:ss')}`
             }
             let body = {
                 procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
                 values: [
-                    `LT${this.moment().format('MMYYYY')}`, 
-                    this.logtimeuserinfo.ShortName, 
-                    this.logtimeuserinfo.IDCode,
-                    this.logtimeuserinfo.EmployeeCode, 
-                    this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD'),
-                    this.logtimeuserinfo.TimeIn, 
-                    timeLogOut,
-                    this.hours, 
-                    this.logtimeuserinfo.Undertime, 
-                    this.logtimeuserinfo.Tardiness, 
-                    this.logtimeuserinfo.Overtime, 
-                    this.logtimeuserinfo.ND, 
-                    this.logtimeuserinfo.Shift, 
-                    this.logtimeuserinfo.SW1, 
+                    `LT${this.moment(value.LogDateTime).format('MMYYYY')}`, 
+                    value.ShortName, 
+                    value.IDCode,
+                    value.EmployeeCode, 
+                    value.LogDateTime,
+                    value.TimeIn,
+                    timeLogOut, //TimeOut
+                    parseFloat(duration.hours.toFixed(2)), //NoHrs
+                    this.setUnderTime(duration.hours), //value.Undertime, 
+                    value.Tardiness, 
+                    value.Overtime, 
+                    value.ND, 
+                    value.Shift, 
+                    value.SW1, 
                     1, 
-                    null, 
-                    null, 
-                    null,
-                    null, 
-                    this.logtimeuserinfo.ManualRem, 
-                    this.logtimeuserinfo.ManualRemO, 
-                    this.logtimeuserinfo.ND1, 
-                    this.logtimeuserinfo.ND2, 
-                    this.logtimeuserinfo.NoHrs1, 
-                    this.payCode,
-                    this.logtimeuserinfo.DayOff,
-                    this.logtimeuserinfo.OTCode,
-                    this.logtimeuserinfo.Meal,
-                    this.logtimeuserinfo.MealOCC,
-                    this.logtimeuserinfo.PostOT,
-                    this.logtimeuserinfo.Leave,
-                    this.logtimeuserinfo.TransIn,
-                    this.logtimeuserinfo.TransOut,
-                    this.logtimeuserinfo.DepartmentCode,
-                    this.logtimeuserinfo.SectionCode,
-                    this.logtimeuserinfo.TeamCode,
-                    this.logtimeuserinfo.DesignationCode,
+                    value.UserAcct, 
+                    value.UserAcctO, 
+                    value.UserTime, 
+                    value.UserTimeO, 
+                    value.ManualRem, 
+                    '121', //ManualRemO, 
+                    value.ND1, 
+                    value.ND2, 
+                    value.NoHrs1, 
+                    value.OTCode == 'RD' ? 'R' : 'O', // PayCode
+                    value.DayOff,
+                    value.OTCode,
+                    value.Meal,
+                    value.MealOCC,
+                    value.PostOT,
+                    value.Leave,
+                    value.TransIn,
+                    value.TransOut,
+                    value.DepartmentCode,
+                    value.SectionCode,
+                    value.TeamCode,
+                    value.DesignationCode,
                     1
                 ]
             }

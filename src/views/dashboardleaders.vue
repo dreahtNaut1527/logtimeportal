@@ -2,40 +2,71 @@
     <v-main>
         <v-card-text class="display-1 font-weight-bold">Dashboard</v-card-text>
         <v-container>
-            <v-row>
-                <v-col cols="12" md="9">
-                    <v-row>
-                        <v-col cols="12" md="12">
-                            <v-row align="center" justify="center">
-                                <v-col cols="12" md="6">
-                                    <v-card class="rounded-xl" elevation="4">
-                                        <v-toolbar flat>
-                                            <v-toolbar-title class="subtitle-1 font-weight-light">Present</v-toolbar-title>
-                                            <v-spacer></v-spacer>
-                                            <v-avatar class="mt-n10 rounded-pill" color="#CCB96C" size="60" tile>
-                                                <v-icon x-large dark>mdi-account-check-outline</v-icon>
-                                            </v-avatar>
-                                        </v-toolbar>
-                                        <v-card-text class="mt-n3 ml-2 display-1 font-weight-bold">
-                                            {{filterTotalPresent.length == 0 ? 0 : filterTotalPresent.length}}
-                                        </v-card-text>
-                                    </v-card>
-                                </v-col>
-                                <v-col cols="12" md="6">
-                                    <v-card class="rounded-xl" elevation="4">
-                                        <v-toolbar flat>
-                                            <v-toolbar-title class="subtitle-2 font-weight-light">Absent</v-toolbar-title>
-                                            <v-spacer></v-spacer>
-                                            <v-avatar class="mt-n10 rounded-pill" color="teal" size="60" tile>
-                                                <v-icon x-large dark>mdi-exclamation-thick</v-icon>
-                                            </v-avatar>
-                                        </v-toolbar>
-                                        <v-card-text class="mt-n3 ml-2 display-1 font-weight-bold">
-                                            {{filterTotalAbsent.length}}
-                                        </v-card-text>
-                                    </v-card>
-                                </v-col>
-                            </v-row>    
+            <v-row align="center" justify="center">
+                <v-col cols="12" md="12">
+                    <v-row align="center" justify="space-between">
+                        <v-col cols="12" md="4">
+                            <v-card flat>
+                                <v-subheader class="mt-3">Total Present: 
+                                    <v-spacer></v-spacer>
+                                    <div class="font-weight-bold text-h4 mr-10">
+                                        {{filterTotalPresent.length == 0 ? 0 : filterTotalPresent.length}}
+                                    </div>
+                                </v-subheader>
+                                <v-container class="text-center pa-10 mt-n5">
+                                    <v-progress-circular
+                                        :rotate="90"
+                                        :size="150"
+                                        :width="10"
+                                        :value="(filterTotalPresent.length / filterEmployeeLogtime.length) * 100"
+                                        color="#CCB96C"
+                                    >
+                                        <v-icon color="#CCB96C" x-large>mdi-account</v-icon>
+                                    </v-progress-circular>
+                                </v-container>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="12" md="4">
+                            <v-card flat>
+                                <v-subheader class="mt-3">Total Absent: 
+                                    <v-spacer></v-spacer>
+                                    <div class="font-weight-bold text-h4 mr-10">
+                                        {{filterTotalAbsent.length}}
+                                    </div>
+                                </v-subheader>
+                                <v-container class="text-center pa-10 mt-n5">
+                                    <v-progress-circular
+                                        :rotate="90"
+                                        :size="150"
+                                        :width="10"
+                                        :value="(filterTotalAbsent.length / filterEmployeeLogtime.length) * 100"
+                                        color="teal"
+                                    >
+                                        <v-icon color="teal" x-large>mdi-exclamation-thick</v-icon>
+                                    </v-progress-circular>
+                                </v-container>
+                            </v-card>
+                        </v-col>
+                        <v-col cols="12" md="4">
+                            <v-card flat>
+                                <v-subheader class="mt-3">Percentage: 
+                                    <v-spacer></v-spacer>
+                                    <div class="font-weight-bold text-h4 mr-10">
+                                        {{((filterTotalPresent.length / filterEmployeeLogtime.length) * 100).toFixed(2)}}%
+                                    </div>
+                                </v-subheader>
+                                <v-container class="text-center pa-10 mt-n5">
+                                    <v-progress-circular
+                                        :rotate="90"
+                                        :size="150"
+                                        :width="10"
+                                        :value="(filterTotalPresent.length / filterEmployeeLogtime.length) * 100"
+                                        color="#CC95C7"
+                                    >
+                                        <v-icon color="#CC95C7" x-large>mdi-percent</v-icon>
+                                    </v-progress-circular>
+                                </v-container>
+                            </v-card>
                         </v-col>
                     </v-row>
                 </v-col>
@@ -43,29 +74,43 @@
                     <v-card>
                         <v-container>
                             <v-toolbar flat>
-                                <v-toolbar-title class="font-weight-bold">Logtime</v-toolbar-title>
+                                <v-toolbar-title class="font-weight-bold hidden-md-and-down">Logtime</v-toolbar-title>
                                 <v-spacer></v-spacer>
+                                <v-text-field
+                                    v-model="searchTable"
+                                    placeholder="Search"
+                                    append-icon="mdi-magnify"
+                                    color="teal"
+                                    hide-details
+                                    outlined
+                                    dense
+                                ></v-text-field>
                                 <v-btn class="mx-3" @click="prevMonth()" color="teal" x-small dark fab><v-icon>mdi-chevron-left</v-icon></v-btn>
                                 {{moment(dtLogtime).format("MMMM DD, YYYY")}}
                                 <v-btn class="mx-3" @click="nextMonth()" color="teal" x-small dark fab><v-icon>mdi-chevron-right</v-icon></v-btn>
                             </v-toolbar>
+                            <v-divider></v-divider>
                             <v-data-table
                                 :headers="headers"
                                 :items="filterEmployeeLogtime"
                                 :loading="loading"
                                 :page.sync="page"
-                                :items-per-page="8"
+                                :search="searchTable"
+                                :items-per-page="5"
                                 loading-text="Loading Data. . .Please Wait"
                                 @page-count="pageCount = $event"
                                 hide-default-footer
                             >
-                                <template v-slot:item="props">
+                                   <template v-slot:item="props">
                                     <tr :style="!props.item.TimeIn ? 'color: #b71c1c;' : ''">
                                         <td>{{props.item.EmployeeCode}}</td>
                                         <td>{{props.item.EmployeeName}}</td>
                                         <td>{{!props.item.TimeIn ? '' : moment.utc(props.item.TimeIn).format('HH:mm:ss')}}</td>
                                         <td>{{!props.item.TimeOut ? '' : moment.utc(props.item.TimeOut).format('HH:mm:ss')}}</td>
-                                        <td>{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
+                                        <td class="text-center">{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
+                                        <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Tardiness}}</td>
+                                        <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Undertime}}</td>
+                                        <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Overtime}}</td>
                                         <td>
                                             <v-chip v-if="props.item.TimeIn" :color="props.item.LogType == 1 ? 'orange' : 'green'" dark>
                                                 {{props.item.LogTypeDesc}}
@@ -132,31 +177,134 @@
                                     </v-chip>
                                 </v-subheader>
                             </v-list-item>
-                            <v-card-text>
-                                <v-row align="center" justify="center" dense>
-                                    <v-col cols="12" md="3">
-                                        <timePicker :menu="timeInDialog" :timeValue.sync="timeIn" timeLabel="Time In" />
-                                    </v-col>
-                                    <v-col cols="12" md="3">
-                                        <timePicker :menu="timeOutDialog" :timeValue.sync="timeOut" timeLabel="Time Out" />
-                                    </v-col>
-                                    <v-col cols="12" md="6">
-                                        <v-text-field
-                                            v-model="employeesLogtimeDetails.ShiftTime"
-                                            label="Shift"
-                                            color="teal"
-                                            append-icon="mdi-calendar-range"
-                                            readonly
-                                            outlined
-                                            dense
-                                        ></v-text-field>
-                                    </v-col>
-                                </v-row>
-                                <v-row  class="mt-n5" dense>
-                                    <v-col cols="12" md="6">
-                                        <v-subheader>Other Details</v-subheader>
-                                        <v-card outlined>
+                            <v-card outlined>
+                                <v-container class="my-n3">
+                                    <v-row align="center" justify="center" dense>
+                                        <v-col cols="12" md="3">
                                             <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-subtitle>TimeIn:</v-list-item-subtitle>
+                                                    <v-list-item-title class="font-weight-bold">
+                                                        {{moment.utc(employeesLogtimeDetails.TimeIn).format('HH:mm:ss')}}
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-subtitle>TimeOut:</v-list-item-subtitle>
+                                                    <v-list-item-title class="font-weight-bold">
+                                                        {{employeesLogtimeDetails.TimeOut != null ? moment.utc(employeesLogtimeDetails.TimeOut).format('HH:mm:ss') : "N/A"}}
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-subtitle>Shift:</v-list-item-subtitle>
+                                                    <v-list-item-title class="font-weight-bold">
+                                                        {{employeesLogtimeDetails.ShiftTime}}
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </v-col>
+                                    </v-row>
+                                </v-container>
+                            </v-card>
+                            <v-card class="mt-2" outlined>
+                                <v-subheader>Manual Encode:</v-subheader>
+                                <v-divider></v-divider>
+                                <v-container class="mb-n5">
+                                    <v-row align="center" justify="center" dense>
+                                        <v-col cols="12" md="6">
+                                            <v-card-actions class="ma-0 pa-0">
+                                                <v-card-text class="font-weight-bold">TimeIn:</v-card-text>
+                                                <v-spacer></v-spacer>
+                                                <timePicker :menu="timeInDialog" :timeValue.sync="timeIn" timeLabel="" />
+                                            </v-card-actions>                                            
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-card-actions class="ma-0 pa-0">
+                                                <v-card-text class="font-weight-bold">TimeOut:</v-card-text>
+                                                <v-spacer></v-spacer>
+                                                <timePicker :menu="timeOutDialog" :timeValue.sync="timeOut" timeLabel="" />
+                                            </v-card-actions>                                            
+                                        </v-col>
+                                    </v-row>
+                                    <v-row class="mb-n10" dense>
+                                        <v-col cols="12" md="3">
+                                            <v-text-field
+                                                v-model="employeesLogtimeDetailsManual.NoHrs"
+                                                label="Hours"
+                                                type="number"
+                                                color="teal" 
+                                                outlined
+                                                dense
+                                            ></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-text-field
+                                                v-model="employeesLogtimeDetailsManual.Undertime"
+                                                label="Undertime"
+                                                color="teal" 
+                                                type="number"
+                                                outlined
+                                                dense
+                                            ></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-text-field
+                                                v-model="employeesLogtimeDetailsManual.Tardiness"
+                                                label="Tardiness"
+                                                color="teal" 
+                                                type="number"
+                                                outlined
+                                                dense
+                                            ></v-text-field>
+                                        </v-col>
+                                        <v-col cols="12" md="3">
+                                            <v-text-field
+                                                v-model="employeesLogtimeDetailsManual.Overtime"
+                                                label="Overtime"
+                                                color="teal" 
+                                                type="number"
+                                                outlined
+                                                dense
+                                            ></v-text-field>
+                                        </v-col>
+                                    </v-row>
+                                    <v-card-actions>
+                                        <v-checkbox 
+                                            v-model="employeesLogtimeDetailsManual.Meal" 
+                                            label="Meal" 
+                                            color="teal" 
+                                            readonly
+                                            dense
+                                        ></v-checkbox>
+                                        <v-spacer></v-spacer>
+                                        <v-checkbox 
+                                            v-model="isHalfDay" 
+                                            @change="setHalfDay(employeesLogtimeDetailsManual)"
+                                            label="Half Day" 
+                                            color="teal" 
+                                            dense
+                                        ></v-checkbox>
+                                    </v-card-actions>
+                                    <v-textarea
+                                        v-model="employeesLogtimeDetailsManual.Remarks"
+                                        color="teal"
+                                        :height="100"
+                                        label="Remarks"
+                                        outlined    
+                                    ></v-textarea>
+                                </v-container>
+                            </v-card>
+                            <!-- <v-card-text> -->
+                                <!-- <v-row  class="mt-n5" dense>
+                                    <v-col cols="12" md="6"> -->
+                                            <!-- <v-list-item>
                                                 <v-list-item-content>
                                                     <v-list-item-subtitle>Hours:</v-list-item-subtitle>
                                                 </v-list-item-content>
@@ -179,9 +327,8 @@
                                                     <v-list-item-subtitle>Tardiness:</v-list-item-subtitle>
                                                 </v-list-item-content>
                                                 <v-subheader class="font-weight-bold">{{employeesLogtimeDetails.Tardiness}}</v-subheader>
-                                            </v-list-item>
-                                        </v-card>
-                                    </v-col>
+                                            </v-list-item> -->
+                                    <!-- </v-col>
                                     <v-col cols="12" md="6">
                                         <v-checkbox 
                                             v-model="isHalfDay" 
@@ -199,14 +346,15 @@
                                             outlined    
                                         ></v-textarea>
                                     </v-col>
-                                </v-row>
-                            </v-card-text>
+                                </v-row> -->
+                            <!-- </v-card-text> -->
                         </v-col>
                     </v-row>
-                    <v-card-actions v-if="employeesLogtimeDetails.LogType == 1">
+                    <v-card-actions>
                         <v-spacer></v-spacer>
                         <v-btn @click="dialog = false" text>Cancel</v-btn>
-                        <v-btn @click="saveEmployeeLogtime(employeesLogtimeDetails)" color="teal" dark>Save</v-btn>
+                        <!-- <v-btn v-if="employeesLogtimeDetails.LogType == 1" @click="saveEmployeeLogtime(employeesLogtimeDetails)" color="teal" dark>Save</v-btn> -->
+                        <v-btn v-if="employeesLogtimeDetails.LogType == 1" @click="saveEmployeeLogtimeData(employeesLogtimeDetailsManual)" color="teal" dark>Save</v-btn>
                     </v-card-actions>
                 </v-container>
             </v-card>
@@ -229,15 +377,37 @@ export default {
             loading: true,
             pageCount: 0,
             page: 1,
+            searchTable: '',
             dtLogtime: '',
             employeesLogtime: [],
             employeesLogtimeDetails: {},
+            employeesLogtimeDetailsManual: {
+                ShortName: null,
+                LogDateTime: null,
+                EmployeeCode: null,
+                TimeIn: null, 
+                TimeOut: null,
+                NoHrs: 0.0000,
+                Undertime: 0.0000,
+                Tardiness: 0.0000,
+                Overtime: 0.0000,
+                Meal: 0,
+                PayCode: null,
+                ManualRem: null,
+                ManualRemO: null,
+                IsHalfDay: false,
+                Remarks: null,
+                UpdatedUserId: null,
+            },
             headers: [
                 {text: 'Code', value: 'EmployeeCode'},
                 {text: 'Name', value: 'EmployeeName'},
                 {text: 'Time In', value: 'TimeIn'},
                 {text: 'Time Out', value: 'TimeOut'},
                 {text: 'Hours', value: 'NoHrs'},
+                {text: 'Tardiness', value: 'Tardiness'},
+                {text: 'Undertime', value: 'Undertime'},
+                {text: 'Overtime', value: 'Overtime'},
                 {text: 'Type', value: 'LogTypeDesc'},
                 {text: 'Actions', value: ''}
             ],
@@ -246,6 +416,9 @@ export default {
     created() {
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
         this.loadEmployeesLogtime()
+    },
+    mounted() {
+        
     },
     computed: {
         filterEmployeeLogtime() {
@@ -274,7 +447,7 @@ export default {
                     rec.OTCode == 'RD'
                 )
             })
-        }
+        },
     },
     methods: {
         loadEmployeesLogtime() {
@@ -321,7 +494,6 @@ export default {
                     )
                     break;
             }
-            // console.log(body);
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                 this.employeesLogtime = res.data
                 this.loading = false
@@ -341,199 +513,308 @@ export default {
         },
         viewEmployeeLogtimeDetails(val) {
             this.dialog = true
-            Object.assign(this.employeesLogtimeDetails, val)
-            this.timeIn = val.TimeIn == null ? null : this.moment.utc(val.TimeIn).format('HH:mm:ss')
-            this.timeOut = val.TimeOut == null ? null : this.moment.utc(val.TimeOut).format('HH:mm:ss')
-        },
-        saveEmployeeLogtime(record) {
-            this.swal.fire({
-                title: 'Are you sure?',
-                text: "You won't be able to revert this!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: 'teal',
-                confirmButtonText: 'Yes, Save it!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    this.setTimeOut(record)
-                    this.dialog = false
-                    this.employeesLogtimeDetails = {}
-                    this.loadEmployeesLogtime()
-                    this.swal.fire(
-                        'Confirmed!',
-                        'Recored has been Updated.',
-                        'success'
-                    )
-                }
-            })
-        },
-        setTimeOut(value) {
-            let timeLogOut = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.timeOut}`
-            let body = {
-                procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-                values: [
-                    `LT${this.moment().format('MMYYYY')}`, 
-                    value.ShortName, 
-                    value.IDCode,
-                    value.EmployeeCode, 
-                    this.moment(value.LogDateTime).format('YYYY-MM-DD'),
-                    value.TimeIn, 
-                    timeLogOut,
-                    value.NoHrs, 
-                    value.Undertime, 
-                    value.Tardiness, 
-                    value.Overtime, 
-                    value.ND, 
-                    value.Shift, 
-                    value.SW1, 
-                    1, 
-                    value.UserAcct, 
-                    this.logtimeuserinfo.EmployeeCode,  //UserAcctO, 
-                    value.UserTime, 
-                    this.moment.utc().format('YYYY-MM-DD HH:mm:ss'), //UserTimeO, 
-                    value.ManualRem, 
-                    '121', // Manual RemO
-                    value.ND1, 
-                    value.ND2, 
-                    value.NoHrs1, 
-                    value.OTCode == 'RD' ? 'R' : 'O', // OTCode
-                    value.DayOff,
-                    value.OTCode,
-                    value.Meal,
-                    value.MealOCC,
-                    value.PostOT,
-                    value.Leave,
-                    value.TransIn,
-                    value.TransOut,
-                    value.DepartmentCode,
-                    value.SectionCode,
-                    value.TeamCode,
-                    value.DesignationCode,
-                    1
-                ]
+            this.employeesLogtimeDetails = val
+            this.employeesLogtimeDetailsManual = {
+                ShortName: val.ShortName,
+                LogDateTime: val.LogDateTime,
+                EmployeeCode: val.EmployeeCode,
+                TimeIn: val.AdminTimeIn, 
+                TimeOut: val.AdminTimeOut,
+                NoHrs: val.AdminNoHrs,
+                Undertime: val.AdminUndertime,
+                Tardiness: val.AdminTardiness,
+                Overtime: val.AdminOvertime,
+                Meal: val.Meal,
+                PayCode: val.PayCode,
+                ManualRem: val.ManualRem,
+                ManualRemO: val.ManualRemO,
+                IsHalfDay: val.IsHalfDay,
+                Remarks: val.Remakrs,
+                UpdatedUserId: this.logtimeuserinfo.EmployeeCode,
             }
-            // console.log(body)
-            this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-            if(this.isHalfDay) {
+            // this.timeIn = val.TimeIn == null ? null : this.moment.utc(val.TimeIn).format('HH:mm:ss')
+            // this.timeOut = val.TimeOut == null ? null : this.moment.utc(val.TimeOut).format('HH:mm:ss')
+        },
+        clearVariables() {
+            this.timeIn = null
+            this.timeOut = null
+            this.employeesLogtimeDetails = {}
+            this.loadEmployeesLogtime()
+            this.employeesLogtimeDetailsManual = {
+                ShortName: null,
+                LogDateTime: null,
+                EmployeeCode: null,
+                TimeIn: null, 
+                TimeOut: null,
+                NoHrs: 0.0000,
+                Undertime: 0.0000,
+                Tardiness: 0.0000,
+                Overtime: 0.0000,
+                Meal: 0,
+                PayCode: null,
+                ManualRem: null,
+                ManualRemO: null,
+                IsHalfDay: false,
+                Remarks: null,
+                UpdatedUserId: null,
+            }
+        },
+        setHalfDay(val){
+            let timeInVal = null
+            let timeOutVal = null
+            let dtToday = this.moment.utc(this.serverDateTime).format('YYYY-MM-DD')
+            if(this.timeIn != null) {
+                timeInVal = this.moment.utc(`${dtToday} ${this.timeIn}`, 'YYYY-MM-DD HH:mm:ss')
+                if(this.isHalfDay) {
+                    // Set Undertime Value
+                    this.timeOut = timeInVal.add(4, 'hours')
+                    this.timeOut = timeInVal.set({second: 0}).format('HH:mm')
+                    timeOutVal = this.moment.utc(`${dtToday} ${this.timeOut}`, 'YYYY-MM-DD HH:mm:ss')
+                    val.TimeIn = timeInVal.format('YYYY-MM-DD HH:mm:ss')
+                    val.timeOut = timeOutVal.format('YYYY-MM-DD HH:mm:ss')
+                } else {
+                    this.timeOut = null
+                    val.NoHrs = 0
+                    val.Undertime = 0
+                    val.Overtime = 0
+                    val.Tardiness = 0
+                }
+            }
+        },
+        setLogtimeValues() {
+            let duration = null
+            let dtToday = this.moment(this.serverDateTime).format('YYYY-MM-DD')
+            let timeInVal = this.moment(`${dtToday} ${this.timeIn}`, 'YYYY-MM-DD HH:mm:ss')
+            let timeOutVal = this.moment(`${dtToday} ${this.timeOut}`, 'YYYY-MM-DD HH:mm:ss')
+            
+            duration = this.calculateDates(timeOutVal, timeInVal)
+            if(this.timeOut != null && timeInVal.format('HH') < timeOutVal.format('HH')) {
+                Object.assign(this.employeesLogtimeDetailsManual, {
+                    TimeIn: `${dtToday} ${this.timeIn}`,
+                    TimeOut: `${dtToday} ${this.timeOut}`,
+                    NoHrs: (duration.hours) >= 8 ? 8 : parseFloat((duration.hours).toFixed(2)),
+                    Overtime: this.setOvertime(duration.hours),
+                    Undertime: this.setUnderTime(duration.hours),
+                    Tardiness: 0
+                })
+            } else {
+                this.employeesLogtimeDetailsManual.NoHrs = 0
+                this.employeesLogtimeDetailsManual.Undertime = 0
+                this.employeesLogtimeDetailsManual.Tardiness = 0
+                this.employeesLogtimeDetailsManual.Overtime = 0
+            }
+        },
+        saveEmployeeLogtimeData(rec) {
+            let body = null
+            if(rec.TimeIn == null || rec.TimeOut == null) {
+                this.swal.fire('Oh No!', 'Please fill up the required fields', 'error')
+            } else {
                 body = {
                     procedureName: 'Logtime.dbo.ProcLogtimeManualEncode',
                     values: [
-                        value.LogDateTime, 
-                        value.EmployeeCode,
+                        rec.ShortName,
+                        rec.LogDateTime, 
+                        rec.EmployeeCode,
+                        rec.TimeIn, 
+                        rec.TimeOut,
+                        rec.NoHrs,
+                        rec.Undertime,
+                        rec.Tardiness,
+                        rec.Overtime,
+                        rec.Meal,
                         this.isHalfDay,
-                        value.Remarks,
-                        this.logtimeuserinfo.EmployeeCode,
+                        rec.Remarks,
+                        rec.UpdatedUserId,
                         1   
                     ]
                 }
-                this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-            }   
-        },
-        setHalfDay(val){
-            let timeInVal = this.moment.utc(`${val.StartTime}`, 'YYYY-MM-DD HH:mm:ss')
-            
-            if(this.isHalfDay) {
-                // Set Undertime Value
-                this.timeOut = timeInVal.add(4, 'hours')
-                this.timeOut = timeInVal.set({second: 0}).format('HH:mm')
-            } else {
-                this.timeOut = null
-                val.NoHrs = 0
-                val.Undertime = 0
-                val.Overtime = 0
-                val.Tardiness = 0
+                // console.log(body);
+                this.swal.fire({
+                    title: 'Are you sure?',
+                    text: "This data will be uploaded to admin",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: 'teal',
+                    confirmButtonText: 'Yes, Save it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                        this.updateORALogtime(this.employeesLogtimeDetailsManual)
+                        this.dialog = false
+                        this.clearVariables()
+                        this.swal.fire('Confirmed!', 'Record has been Uploaded to Admin.', 'success')
+                    }
+                })
             }
-        },
-        setOvertime(hours) {
-            let decimal = (hours - 9).toFixed(2)
-
-            if(decimal.substr(2, 1) > 5) {
-                return (decimal - 0.1).toFixed(2)
-            } else {
-                return (hours - 1) > 8 ? (hours - 9).toFixed(2) : 0
-            }
-        },
-        setUnderTime(hours) {
-            return (hours - 9) < 0 ? (hours - 9).toFixed(2) : 0
         },
         updateORALogtime(value) {
             let body = {
-                server: process.env.NODE_ENV == 'production' ? `HRIS${value.ShortName}` : 'HRIS',
+                server: `HRIS${value.ShortName}`,
                 procedureName: 'PROCUPDATELOGTIME',
                 values: [
                     value.EmployeeCode, 
                     this.moment(value.LogDateTime).format('YYYY-MM-DD'),
-                    value.StartTime,
-                    value.EndTime,
-                    8, 
-                    value.SW1, 
+                    value.TimeIn,
+                    value.TimeOut,
+                    value.NoHrs, 
+                    value.Undertime, 
+                    value.Tardiness, 
+                    value.Overtime, 
                     1, 
-                    this.payCode,
+                    1, 
+                    value.PayCode,
                     value.ManualRem, 
-                    value.ManualRemO, 
+                    '121', 
                 ]
             }
-            // console.log(body)
-            this.axios.post(`${this.asd_sql}/oraprocedure.php`, {data: JSON.stringify(body)})
-        }, 
-        calculateDates(date1, date2) {
+            console.log(body)
+            // this.axios.post(`${this.asd_sql}/oraprocedure.php`, {data: JSON.stringify(body)})
+        },
+        // saveEmployeeLogtime(record) {
+        //     this.swal.fire({
+        //         title: 'Are you sure?',
+        //         text: "You won't be able to revert this!",
+        //         icon: 'warning',
+        //         showCancelButton: true,
+        //         confirmButtonColor: 'teal',
+        //         confirmButtonText: 'Yes, Save it!'
+        //     }).then((result) => {
+        //         if (result.isConfirmed) {
+        //             // this.setTimeOut(record)
+        //             console.log(record)
+        //             this.clearVariables()
+        //             this.dialog = false
+        //             this.swal.fire('Confirmed!', 'Record has been Updated.', 'success')
+        //         }
+        //     })
+        // },
+        // setTimeOut(value) {
+        //     let timeLogIn = null
+        //     let timeLogOut = null
 
-            let years = date1.diff(date2, 'year');
-            date2.add(years, 'years');
+        //     timeLogIn = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.timeIn}`
+        //     if(this.timeOut) {
+        //         timeLogOut = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.timeOut}`
+        //     }
 
-            let months = date1.diff(date2, 'months');
-            date2.add(months, 'months');
-
-            let days = date1.diff(date2, 'days');
-            date2.add(days, 'days');
-
-            let hours = date1.diff(date2, 'hours', true);
-            date2.add(hours, 'hours');
-
-            let minutes = date1.diff(date2, 'minutes', true);
-            date2.add(minutes, 'minutes');
-
-            let seconds = date1.diff(date2, 'seconds');
-
-            return {years, months, days, hours, minutes, seconds};
-        }
+        //     let body = {
+        //         procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+        //         values: [
+        //             `LT${this.moment().format('MMYYYY')}`, 
+        //             value.ShortName, 
+        //             value.IDCode,
+        //             value.EmployeeCode, 
+        //             this.moment(value.LogDateTime).format('YYYY-MM-DD'),
+        //             timeLogIn, 
+        //             timeLogOut,
+        //             value.NoHrs, 
+        //             value.Undertime, 
+        //             value.Tardiness, 
+        //             value.Overtime, 
+        //             value.ND, 
+        //             value.Shift, 
+        //             value.SW1, 
+        //             1, 
+        //             this.logtimeuserinfo.EmployeeCode,  //UserAcct, 
+        //             this.logtimeuserinfo.EmployeeCode,  //UserAcctO, 
+        //             this.moment.utc().format('YYYY-MM-DD HH:mm:ss'), //UserTime, 
+        //             this.moment.utc().format('YYYY-MM-DD HH:mm:ss'), //UserTimeO, 
+        //             '121', //ManualRem, 
+        //             '121', // Manual RemO
+        //             value.ND1, 
+        //             value.ND2, 
+        //             value.NoHrs1, 
+        //             value.OTCode == 'RD' ? 'R' : 'O', // OTCode
+        //             value.DayOff,
+        //             value.OTCode,
+        //             value.Meal,
+        //             value.MealOCC,
+        //             value.PostOT,
+        //             value.Leave,
+        //             value.TransIn,
+        //             value.TransOut,
+        //             value.DepartmentCode,
+        //             value.SectionCode,
+        //             value.TeamCode,
+        //             value.DesignationCode,
+        //             1
+        //         ]
+        //     }
+        //     console.log(body)
+        //     this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+        //     if(this.isHalfDay) {
+        //         body = {
+        //             procedureName: 'Logtime.dbo.ProcLogtimeManualEncode',
+        //             values: [
+        //                 value.LogDateTime, 
+        //                 value.EmployeeCode,
+        //                 this.isHalfDay,
+        //                 value.Remarks,
+        //                 this.logtimeuserinfo.EmployeeCode,
+        //                 1   
+        //             ]
+        //         }
+        //         this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+        //     }   
+        // },
+        // setHalfDay(val){
+        //     let timeInVal = this.moment.utc(`${val.StartTime}`, 'YYYY-MM-DD HH:mm:ss')
+            
+        //     if(this.isHalfDay) {
+        //         // Set Undertime Value
+        //         this.timeOut = timeInVal.add(4, 'hours')
+        //         this.timeOut = timeInVal.set({second: 0}).format('HH:mm')
+        //     } else {
+        //         this.timeOut = null
+        //         val.NoHrs = 0
+        //         val.Undertime = 0
+        //         val.Overtime = 0
+        //         val.Tardiness = 0
+        //     }
+        // }, 
     },
     watch: {
         dialog(val) {
             if(!val) {
-                this.employeesLogtimeDetails = {}
-                this.isHalfDay = false
+                this.clearVariables()
             }
         },
-        timeOut(val) {
-            let duration = {}
-            let dateToday = this.moment.utc(this.serverDateTime).format('YYYY-MM-DD')
-            let timeInVal = this.moment.utc(`${this.employeesLogtimeDetails.StartTime}`, 'YYYY-MM-DD HH:mm:ss')
-            let timeOutVal = this.moment.utc(`${dateToday} ${val}`, 'YYYY-MM-DD HH:mm:ss')
-            let hours =  timeInVal.format('HH')
-
-            //Calculate
-            duration = this.calculateDates(timeOutVal, timeInVal)
-            this.isHalfDay = duration.hours > 4 ? false : true
-            
-            if(!this.isHalfDay) {
-                if (val && hours < timeOutVal.format('HH')) {
-                    this.employeesLogtimeDetails.TimeOut = `${dateToday} ${val}`
-
-                    this.employeesLogtimeDetails.NoHrs = (duration.hours - 1) >= 8 ? 8 : (duration.hours - 1).toFixed(2)
-                    this.employeesLogtimeDetails.Overtime = this.setOvertime(duration.hours)
-                    this.employeesLogtimeDetails.Undertime = this.setUnderTime(duration.hours)
-                } else {
-                    this.employeesLogtimeDetails.NoHrs = 0
-                    this.employeesLogtimeDetails.Overtime = 0
-                    this.employeesLogtimeDetails.TimeOut = null
-                }
-            } else {
-                this.employeesLogtimeDetails.NoHrs = duration.hours
-                this.employeesLogtimeDetails.Overtime = 0
-                this.employeesLogtimeDetails.Undertime = duration.hours 
-            }
+        timeIn() {
+            this.setLogtimeValues()
+        },
+        timeOut() {
+            this.setLogtimeValues()
         }
+        // timeOut(val) {
+        //     let duration = {}
+        //     let dateToday = this.moment.utc(this.serverDateTime).format('YYYY-MM-DD')
+        //     let timeInVal = this.moment.utc(`${this.employeesLogtimeDetails.StartTime}`, 'YYYY-MM-DD HH:mm:ss')
+        //     let timeOutVal = this.moment.utc(`${dateToday} ${val}`, 'YYYY-MM-DD HH:mm:ss')
+        //     let hours =  timeInVal.format('HH')
+
+        //     //Calculate
+        //     duration = this.calculateDates(timeOutVal, timeInVal)
+        //     // console.log(Math.round(duration.hours));
+        //     this.isHalfDay = duration.hours == 4 ? true : false
+            
+        //     if(!this.isHalfDay) {
+        //         if (val && hours < timeOutVal.format('HH')) {
+        //             this.employeesLogtimeDetails.TimeOut = `${dateToday} ${val}`
+
+        //             this.employeesLogtimeDetails.NoHrs = (duration.hours - 1) >= 8 ? 8 : parseFloat((duration.hours - 1).toFixed(2))
+        //             this.employeesLogtimeDetails.Overtime = this.setOvertime(duration.hours)
+        //             this.employeesLogtimeDetails.Undertime = this.setUnderTime(duration.hours)
+        //         } else {
+        //             this.employeesLogtimeDetails.NoHrs = 0
+        //             this.employeesLogtimeDetails.Overtime = 0
+        //             this.employeesLogtimeDetails.TimeOut = null
+        //         }
+        //     } else {
+        //         this.employeesLogtimeDetails.NoHrs = duration.hours
+        //         this.employeesLogtimeDetails.Overtime = 0
+        //         this.employeesLogtimeDetails.Undertime = duration.hours 
+        //     }
+        // }
     },
     components: {   
         timePicker

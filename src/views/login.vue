@@ -135,22 +135,26 @@ export default {
             }
         },
         setTimeIn(value) {
+            let employeeData = null
+            let duration = null
             let dtToday = null
             let serverData = {}
+            this.loading = true
             let startShift = this.moment.utc(value.StartTime)
             let endShift = this.moment.utc(value.EndTime)
-            this.loading = true
 
             this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
                 //Get Server Date Time
                 serverData = res.data
                 this.$store.commit('CHANGE_SERVERDATETTIME', serverData.SERVERDATETIME)
                 
-                dtToday = this.moment(this.serverDateTime)
+                dtToday = this.moment.utc(this.serverDateTime)
 
                 // format shift for ORACLE
                 value.StartTime = `${dtToday.format('YYYY-MM-DD')} ${startShift.format('HH:mm:ss')}`
                 value.EndTime = `${dtToday.format('YYYY-MM-DD')} ${endShift.format('HH:mm:ss')}`
+
+                duration = this.calculateDates(dtToday, this.moment(value.StartTime))
                 
                 // Check if employee already logged in 
                 if(!value.TimeIn && value.UserLevel == 0) {                
@@ -161,12 +165,12 @@ export default {
                             value.ShortName, 
                             `${value.EmployeeCode}${dtToday.format('MMDDYYYY')}`,
                             value.EmployeeCode, 
-                            dtToday.format('YYYY-MM-DD'), 
-                            this.serverDateTime, // Time In
+                            dtToday.format('YYYY-MM-DD'), // LogDateTime
+                            dtToday.format('YYYY-MM-DD HH:mm:ss'), // Time In
                             value.TimeOut, 
                             value.NoHrs, 
                             value.Undertime, 
-                            this.setTardiness(this.serverDateTime, value.StartTime), //Tardiness, 
+                            duration.hours - 9, //Tardiness, 
                             value.Overtime, 
                             value.ND, 
                             value.Shift, 
@@ -197,47 +201,35 @@ export default {
                             1
                         ]
                     }
-                    // console.log(value)
+                    // console.log(body)
                     this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-                }
-                this.loading = false
-                this.$store.commit('CHANGE_USER_INFO', value)
-                this.$store.commit('CHANGE_USER_LOGGING', true)
-                if(value.UserLevel == 0) {
-                    this.$router.push('/dashboard')
+
+                    body = {
+                        procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
+                        values: [
+                            this.moment().format('YYYY-MM-DD'),
+                            this.username
+                        ] 
+                    }
+                    this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
+                        if(Array.isArray(res.data)) {
+                            employeeData = res.data[0]
+                            this.$store.commit('CHANGE_USER_INFO', employeeData)
+                            this.$router.push('/dashboard')
+                        }
+                    })
                 } else {
-                    this.$router.push('/dashboardleaders')
+                    this.$store.commit('CHANGE_USER_INFO', value)
+                    if(value.UserLevel == 0) {
+                        this.$router.push('/dashboard')
+                    } else {
+                        this.$router.push('/dashboardleaders')
+                    }
                 }
+                this.$store.commit('CHANGE_USER_LOGGING', true)
+                this.loading = false
             })
         },
-        setTardiness(timeIn, startTime) {
-            let duration = null
-            let timeInVal = this.moment(timeIn, 'YYYY-MM-DD HH:mm:ss')
-            let startTimeVal = this.moment(startTime, 'YYYY-MM-DD HH:mm:ss')
-            duration = this.calculateDates(startTimeVal, timeInVal)
-            return duration.hours
-        }, 
-        calculateDates(date1, date2) {
-
-            let years = date1.diff(date2, 'year');
-            date2.add(years, 'years');
-
-            let months = date1.diff(date2, 'months');
-            date2.add(months, 'months');
-
-            let days = date1.diff(date2, 'days');
-            date2.add(days, 'days');
-
-            let hours = date1.diff(date2, 'hours', true);
-            date2.add(hours, 'hours');
-
-            let minutes = date1.diff(date2, 'minutes', true);
-            date2.add(minutes, 'minutes');
-
-            let seconds = date1.diff(date2, 'seconds');
-
-            return {years, months, days, hours, minutes, seconds};
-        }
     }
 } 
 </script>

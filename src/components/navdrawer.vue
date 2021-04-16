@@ -1,5 +1,5 @@
 <template>
-    <v-app-bar color="transparent" hide-on-scroll fixed app>
+    <v-app-bar fixed app>
         <v-spacer></v-spacer>
         <v-avatar size="40">
             <v-img :src="`${photo}/${logtimeuserinfo.EmployeeCode}.jpg`"></v-img>
