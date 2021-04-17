@@ -88,7 +88,21 @@
                                 <v-btn class="mx-3" @click="prevMonth()" color="teal" x-small dark fab><v-icon>mdi-chevron-left</v-icon></v-btn>
                                 {{moment(dtLogtime).format("MMMM DD, YYYY")}}
                                 <v-btn class="mx-3" @click="nextMonth()" color="teal" x-small dark fab><v-icon>mdi-chevron-right</v-icon></v-btn>
-                            </v-toolbar>
+                                <v-tooltip bottom>
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-btn 
+                                        @click="extractData(filterEmployeeLogtime)" 
+                                        color="teal" 
+                                        v-on="on"
+                                        v-bind="attrs"
+                                        x-large 
+                                        icon
+                                    >
+                                        <v-icon>mdi-download</v-icon>
+                                    </v-btn>
+                                </template>
+                                <span>Download CSV</span>
+                                </v-tooltip> </v-toolbar>
                             <v-divider></v-divider>
                             <v-data-table
                                 :headers="headers"
@@ -185,7 +199,7 @@
                                                 <v-list-item-content>
                                                     <v-list-item-subtitle>TimeIn:</v-list-item-subtitle>
                                                     <v-list-item-title class="font-weight-bold">
-                                                        {{moment.utc(employeesLogtimeDetails.TimeIn).format('HH:mm:ss')}}
+                                                        {{employeesLogtimeDetails.TimeIn != null ? moment.utc(employeesLogtimeDetails.TimeIn).format('HH:mm:ss') : "N/A"}}
                                                     </v-list-item-title>
                                                 </v-list-item-content>
                                             </v-list-item>
@@ -450,6 +464,22 @@ export default {
         },
     },
     methods: {
+        extractData(val) {
+            let body = []
+            let dtToday = this.moment.utc(this.serverDateTime).format('MMDDYYYY')
+            val.forEach(rec => [
+                body.push({
+                    Code: rec.EmployeeCode.toString(),
+                    Name: rec.EmployeeName,
+                    TimeIn: rec.TimeIn == null ? '' : this.moment.utc(rec.TimeIn).format('HH:mm:ss'),
+                    TimeOut: rec.TimeOut == null ? '' : this.moment.utc(rec.TimeOut).format('HH:mm:ss'),
+                    LogType: rec.LogType == 1 ? 'Work From Home' : 'Office'
+                })
+            ])  
+            this.axios.post(`${this.api}/exportcsv`, {data: JSON.stringify(body)}).then(res => {
+                this.jsfiledownload(res.data, `Employee Logtime - ${dtToday}.csv`)
+            })
+        },
         loadEmployeesLogtime() {
             this.loading = true
             let body = {
@@ -494,10 +524,11 @@ export default {
                     )
                     break;
             }
+            console.log(body);
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                 this.employeesLogtime = res.data
                 this.loading = false
-            })
+            })  
         },
         nextMonth() {
             this.dtLogtime = this.moment(this.dtLogtime).add(1, 'days').format('YYYY-MM-DD')
@@ -583,12 +614,12 @@ export default {
         },
         setLogtimeValues() {
             let duration = null
-            let dtToday = this.moment(this.serverDateTime).format('YYYY-MM-DD')
-            let timeInVal = this.moment(`${dtToday} ${this.timeIn}`, 'YYYY-MM-DD HH:mm:ss')
-            let timeOutVal = this.moment(`${dtToday} ${this.timeOut}`, 'YYYY-MM-DD HH:mm:ss')
+            let dtToday = this.moment.utc(this.serverDateTime).format('YYYY-MM-DD')
+            let timeInVal = this.moment.utc(`${dtToday} ${this.timeIn}:00`)
+            let timeOutVal = this.moment.utc(`${dtToday} ${this.timeOut}:00`)
             
-            duration = this.calculateDates(timeOutVal, timeInVal)
             if(this.timeOut != null && timeInVal.format('HH') < timeOutVal.format('HH')) {
+                duration = this.calculateDates(timeOutVal, timeInVal)
                 Object.assign(this.employeesLogtimeDetailsManual, {
                     TimeIn: `${dtToday} ${this.timeIn}`,
                     TimeOut: `${dtToday} ${this.timeOut}`,
@@ -611,7 +642,7 @@ export default {
             } else {
                 body = {
                     procedureName: 'Logtime.dbo.ProcLogtimeManualEncode',
-                    values: [
+                    values:  [
                         rec.ShortName,
                         rec.LogDateTime, 
                         rec.EmployeeCode,

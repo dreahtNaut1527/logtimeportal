@@ -233,13 +233,11 @@ export default {
             //Compute duration
             let timeInVal = this.moment.utc(value.TimeIn)
             let timeOutVal  = this.moment.utc(this.serverDateTime)
-            
-            let duration = this.calculateDates(timeOutVal, timeInVal)
-
             let timeLogOut = timeOutVal.format('YYYY-MM-DD HH:mm:ss')
             if(this.moment(value.LogDateTime).format('YYYY-MM-DD') != timeOutVal.format('YYYY-MM-DD')) {
                 timeLogOut = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.moment(value.EndTime).format('HH:mm:ss')}`
             }
+            let duration = this.calculateDates(timeOutVal, timeInVal)
             let body = {
                 procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
                 values: [
@@ -250,7 +248,7 @@ export default {
                     value.LogDateTime,
                     value.TimeIn,
                     timeLogOut, //TimeOut
-                    parseFloat(duration.hours.toFixed(2)), //NoHrs
+                    parseFloat(duration.hours.toFixed(2) - 1), //NoHrs
                     this.setUnderTime(duration.hours), //value.Undertime, 
                     value.Tardiness, 
                     value.Overtime, 
