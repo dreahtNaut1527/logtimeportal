@@ -92,27 +92,21 @@ export default {
         userLoggedIn() { 
             // check if record exists
             if(this.employeeDetails != undefined) {
-                // check logtime
-                if(!this.checkLogtime()) {
-                    this.swal.fire('Sorry! :(', 'Unable to login today. Already logged out', 'error')
+                // check leave
+                if(!this.checkLeave()) {
+                    this.swal.fire('', `You are currently on ${this.employeeDetails.LeaveDesc} leave`, 'error')
                     this.clearVariables()
                 } else {
-                    // check leave
-                    if(!this.checkLeave()) {
-                        this.swal.fire('Sorry! :(', `You are currently on ${this.employeeDetails.LeaveDesc} leave`, 'error')
-                        this.clearVariables()
+                    // check password
+                    if(this.md5(this.password) == this.employeeDetails.Password) {
+                        this.setTimeIn(this.employeeDetails)
                     } else {
-                        // check password
-                        if(this.md5(this.password) == this.employeeDetails.Password) {
-                            this.setTimeIn(this.employeeDetails)
-                        } else {
-                            this.swal.fire('Oh no!', 'Username or Password is incorrect. Please try again', 'error')
-                        }
+                        this.swal.fire('Login Failed','Username and/or Password do not match. Please try again', 'error')
                     }
                 }
             } else {
                 this.clearVariables()
-                this.swal.fire('Sorry! :(', 'No record exists. Please contact your administrator', 'error')
+                this.swal.fire('', 'Account does not exists. Please contact your administrator', 'error')
             }
         },
         clearVariables() {
@@ -157,7 +151,7 @@ export default {
                 duration = this.calculateDates(dtToday, this.moment(value.StartTime))
                 
                 // Check if employee already logged in 
-                if(!value.TimeIn && value.UserLevel == 0) {                
+                if(!value.TimeIn) {                
                     let body = {
                         procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
                         values: [
@@ -203,21 +197,27 @@ export default {
                     }
                     // console.log(body)
                     this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-
-                    body = {
-                        procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
-                        values: [
-                            this.moment().format('YYYY-MM-DD'),
-                            this.username
-                        ] 
-                    }
-                    this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
-                        if(Array.isArray(res.data)) {
-                            employeeData = res.data[0]
-                            this.$store.commit('CHANGE_USER_INFO', employeeData)
-                            this.$router.push('/dashboard')
+                    setTimeout(() => {
+                        body = {
+                            procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
+                            values: [
+                                this.moment().format('YYYY-MM-DD'),
+                                this.username
+                            ] 
                         }
-                    })
+                        this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
+                            if(Array.isArray(res.data)) {
+                                employeeData = res.data[0]
+                                this.$store.commit('CHANGE_USER_INFO', employeeData)
+                                if(value.UserLevel == 0) {
+                                    this.$router.push('/dashboard')
+                                } else {
+                                    this.$router.push('/dashboardleaders')
+                                }
+                            }
+                        })
+                        this.loading = false
+                    }, 2000)
                 } else {
                     this.$store.commit('CHANGE_USER_INFO', value)
                     if(value.UserLevel == 0) {
@@ -227,7 +227,6 @@ export default {
                     }
                 }
                 this.$store.commit('CHANGE_USER_LOGGING', true)
-                this.loading = false
             })
         },
     }

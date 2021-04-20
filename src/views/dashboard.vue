@@ -167,7 +167,7 @@ export default {
         filterLogtime() {
             return this.logtimeData.filter(rec => {
                 return rec.EmployeeCode.includes(this.logtimeuserinfo.EmployeeCode || '')
-            }).sort().reverse()
+            })
         },
         filterTotalPresent() {
             return this.logtimeData.filter(rec => {
