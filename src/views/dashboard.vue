@@ -282,7 +282,10 @@ export default {
                 ]
             }
             // console.log(body)
-            this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+            // Work From Home
+            if(value.LogType == 1) {
+                this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+            }
             this.$store.commit('CHANGE_USER_INFO', {})
             this.$store.commit('CHANGE_SERVERDATETTIME', '')
             this.$router.push("/")

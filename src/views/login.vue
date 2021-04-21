@@ -17,6 +17,19 @@
                             <v-col cols="12" md="11">                                
                                 <v-card-text class="text-center headline">Login to your account</v-card-text>
                                 <v-container>
+                                <v-alert
+                                    class="pa-2 mb-5"
+                                    v-model="alert"
+                                    transition="scale-transition"
+                                    type="error"
+                                    border="left"
+                                    outlined
+                                    dismissible
+                                    dense
+                                    text
+                                >
+                                    <v-subheader class="pa-0 caption">{{alertText}}</v-subheader>
+                                </v-alert>
                                     <v-form ref="forms">
                                         <v-text-field
                                             v-model="username"
@@ -61,6 +74,8 @@
 export default {
     data() {
         return {
+            alertText: null,
+            alert: false,
             valid: true,
             loading: false,
             username: '',
@@ -94,23 +109,27 @@ export default {
             if(this.employeeDetails != undefined) {
                 // check leave
                 if(!this.checkLeave()) {
-                    this.swal.fire('', `You are currently on ${this.employeeDetails.LeaveDesc} leave`, 'error')
+                    this.alert = true
+                    this.alertText = `You are currently on ${this.employeeDetails.LeaveDesc} leave`
                     this.clearVariables()
                 } else {
                     // check password
                     if(this.md5(this.password) == this.employeeDetails.Password) {
                         this.setTimeIn(this.employeeDetails)
                     } else {
-                        this.swal.fire('Login Failed','Username and/or Password do not match. Please try again', 'error')
+                        this.alert = true
+                        this.alertText = 'Username and/or Password do not match. Please try again'
                     }
                 }
             } else {
-                this.clearVariables()
-                this.swal.fire('', 'Account does not exists. Please contact your administrator', 'error')
+                this.alert = true
+                this.alertText = 'Account does not exists. Please contact your administrator'
             }
         },
         clearVariables() {
-            this.employeeDetails = undefined
+            this.alert = false
+            this.alertText = null
+            this.employeeDetails = null
             this.username = ''
             this.password = ''
         },
@@ -129,7 +148,7 @@ export default {
             }
         },
         setTimeIn(value) {
-            let employeeData = null
+            let tempEmployeeData = null
             let duration = null
             let dtToday = null
             let serverData = {}
@@ -207,8 +226,8 @@ export default {
                         }
                         this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                             if(Array.isArray(res.data)) {
-                                employeeData = res.data[0]
-                                this.$store.commit('CHANGE_USER_INFO', employeeData)
+                                tempEmployeeData = res.data[0]
+                                this.$store.commit('CHANGE_USER_INFO', tempEmployeeData)
                                 if(value.UserLevel == 0) {
                                     this.$router.push('/dashboard')
                                 } else {
@@ -229,6 +248,16 @@ export default {
                 this.$store.commit('CHANGE_USER_LOGGING', true)
             })
         },
+    },
+    watch: {
+        username() {
+            this.alert = false
+            this.alertText = null
+        },
+        password() {
+            this.alert = false
+            this.alertText = null
+        }
     }
 } 
 </script>

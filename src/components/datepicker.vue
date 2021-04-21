@@ -10,6 +10,7 @@
      >
         <template v-slot:activator="{ on, attrs }">
             <v-text-field
+               class="mx-3"
                v-model="date"
                :label="label"
                color="teal"

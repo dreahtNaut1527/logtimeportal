@@ -1,13 +1,6 @@
 <template>
     <v-main>
-        <v-row align="center" justify="center">
-            <v-col cols="12" md="9">
-                <v-card-text class="display-1 font-weight-bold">Dashboard</v-card-text> 
-            </v-col>
-            <v-col class="px-16" cols="12" md="3">
-                <datePicker :menu="dateDialog" :dateValue.sync="dtLogtime" dateLabel="Logdate" /> 
-            </v-col>
-        </v-row>                                  
+        <v-card-text class="display-1 font-weight-bold">Dashboard</v-card-text>                                 
         <v-container>
             <v-row justify="center">
                 <v-col cols="12" md="9">
@@ -38,12 +31,12 @@
                                 <v-subheader>Total Absent: 
                                     <v-spacer></v-spacer>
                                     <div class="font-weight-bold text-h4">
-                                        {{filterTotalAbsent.length}}
+                                         {{filterTotalAbsent.length}}
                                     </div>
                                 </v-subheader>
                                 <v-container class="text-center pa-10 mt-n5">
                                     <v-progress-circular
-                                        :rotate="90"
+                                         :rotate="90"
                                         :size="150"
                                         :width="10"
                                         :value="(filterTotalAbsent.length / filterEmployeeLogtime.length) * 100"
@@ -55,7 +48,7 @@
                             </v-card>
                         </v-col>
                         <v-col cols="12" md="4">
-                            <v-card flat>
+                             <v-card flat>
                                 <v-subheader>Percentage: 
                                     <v-spacer></v-spacer>
                                     <div class="font-weight-bold text-h4">
@@ -80,8 +73,7 @@
                 <v-col cols="12" md="3">
                     <v-card outlined>
                         <v-toolbar color="teal" flat dark>
-                            <v-toolbar-title v-if="dtLogtime == moment.utc(logtimeuserinfo.LogDateTime).format('YYYY-MM-DD')">Today</v-toolbar-title>
-                            <v-toolbar-title v-else>{{moment.utc(dtLogtime).format('MMM DD, YYYY')}}</v-toolbar-title>
+                            <v-toolbar-title>Today</v-toolbar-title>
                             <v-spacer></v-spacer>
                             <v-tooltip bottom>
                                 <template v-slot:activator="{ on, attrs }">
@@ -93,7 +85,7 @@
                                         icon
                                     >
                                         <v-icon>
-                                            mdi-table-eye
+                                            mdi-eye
                                         </v-icon>
                                     </v-btn>
                                 </template>
@@ -134,21 +126,35 @@
                                         outlined
                                         dense
                                     ></v-text-field>
+                                    <datePicker :menu="dateDialog" :dateValue.sync="dtLogtime" dateLabel="Logdate" /> 
                                     <v-tooltip bottom>
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-btn 
-                                            @click="extractData(filterEmployeeLogtime)" 
-                                            color="teal" 
-                                            v-on="on"
-                                            v-bind="attrs"
-                                            x-large 
-                                            icon
-                                        >
-                                            <v-icon>mdi-download</v-icon>
-                                        </v-btn>
-                                    </template>
-                                    <span>Download CSV</span>
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn 
+                                                @click="extractData(filterEmployeeLogtime)" 
+                                                color="teal" 
+                                                v-on="on"
+                                                v-bind="attrs"
+                                                x-large 
+                                                icon
+                                            >
+                                                <v-icon>mdi-download</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <span>Download CSV</span>
                                     </v-tooltip> 
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{on, attrs}">
+                                            <v-btn
+                                                color="teal"
+                                                v-on="on"
+                                                v-bind="attrs"
+                                                icon
+                                            >
+                                                <v-icon>mdi-file-excel</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <span>Download Excel</span>
+                                    </v-tooltip>
                             </v-toolbar>
                             <v-divider></v-divider>
                             <v-data-table
@@ -421,7 +427,7 @@
         <v-dialog v-model="logtimeDialog" width="700" persistent>
             <v-card>
                 <v-toolbar color="teal" dark>
-                    <v-toolbar-title>Logtime</v-toolbar-title>
+                    <v-toolbar-title><v-icon large left>mdi-calendar</v-icon>Your Logtime</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn @click="logtimeDialog = !logtimeDialog" icon><v-icon>mdi-close</v-icon></v-btn>
                 </v-toolbar>
@@ -543,7 +549,7 @@ export default {
         filterEmployeeLogtimeUser() {
             return this.employeesLogtime.filter(rec => {
                 return (
-                    this.moment(rec.LogDateTime).format('YYYY-MM-DD') < this.dtLogtime &&
+                    this.moment(rec.LogDateTime).format('YYYY-MM-DD') != this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') &&
                     rec.EmployeeCode == this.logtimeuserinfo.EmployeeCode
                 )
             })
@@ -623,7 +629,7 @@ export default {
                     body.values.push(
                         `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
                         this.logtimeuserinfo.ShortName,
-                        null,
+                        this.logtimeuserinfo.DepartmentName,
                         null,
                         null
                     )
@@ -901,6 +907,11 @@ export default {
         dialog(val) {
             if(!val) {
                 this.clearVariables()
+            }
+        },
+        dtLogtime() {
+            if(this.filterEmployeeLogtime.length == 0) {
+                this.loadEmployeesLogtime()
             }
         },
         timeIn() {
