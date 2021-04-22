@@ -148,8 +148,8 @@ export default {
             }
         },
         setTimeIn(value) {
+            // let duration = null
             let tempEmployeeData = null
-            let duration = null
             let dtToday = null
             let serverData = {}
             this.loading = true
@@ -167,10 +167,10 @@ export default {
                 value.StartTime = `${dtToday.format('YYYY-MM-DD')} ${startShift.format('HH:mm:ss')}`
                 value.EndTime = `${dtToday.format('YYYY-MM-DD')} ${endShift.format('HH:mm:ss')}`
 
-                duration = this.calculateDates(dtToday, this.moment(value.StartTime))
+                // duration = this.calculateDates(dtToday, this.moment(value.StartTime))
                 
                 // Check if employee already logged in 
-                if(!value.TimeIn) {                
+                if(value.TimeIn == null) {                
                     let body = {
                         procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
                         values: [
@@ -183,7 +183,7 @@ export default {
                             value.TimeOut, 
                             value.NoHrs, 
                             value.Undertime, 
-                            duration.hours - 9, //Tardiness, 
+                            value.Tardiness,
                             value.Overtime, 
                             value.ND, 
                             value.Shift, 
