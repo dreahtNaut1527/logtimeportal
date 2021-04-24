@@ -1,0 +1,273 @@
+CREATE TABLE DepartmentCategories
+(
+
+	CompanyCode VARCHAR(3),
+	DepartmentCategoryCode INT IDENTITY NOT NULL,
+	DepartmentCategoryDesc VARCHAR(255),
+	CreatedDate DATETIME NOT NULL,
+	UpdatedDate DATETIME NOT NULL,
+	DeletedDate DATETIME,
+	UpdatedUserId VARCHAR(7),
+	PRIMARY KEY (CompanyCode, DepartmentCategoryCode)
+)
+
+
+CREATE TABLE DepartmentCategoryRelations
+(
+
+	CompanyCode VARCHAR(3),
+	DepartmentCode VARCHAR(3),
+	DepartmentCategoryCode INT,
+	PRIMARY KEY (CompanyCode, DepartmentCode, DepartmentCategoryCode)
+)
+
+
+
+IF OBJECT_ID ('dbo.DepartmentView') IS NOT NULL
+	DROP VIEW dbo.DepartmentView
+GO
+
+CREATE VIEW DepartmentView AS
+
+SELECT
+
+Companies.CompanyCode,
+Companies.ShortName,
+Departments.DepartmentCode,
+Departments.DepartmentName,
+isnull(DepartmentCategories.DepartmentCategoryCode, 0) AS DepartmentCategoryCode,
+isnull(DepartmentCategories.DepartmentCategoryDesc, 'N/A') AS DepartmentCategory,
+convert(VARCHAR(10),Departments.CreatedDate,111) AS CreatedDate,
+convert(VARCHAR(10),Departments.UpdatedDate,111) AS UpdatedDate,
+Departments.DeletedDate
+
+FROM Departments
+
+LEFT JOIN DepartmentCategoryRelations
+ON Departments.CompanyCode = DepartmentCategoryRelations.CompanyCode
+AND Departments.DepartmentCode = DepartmentCategoryRelations.DepartmentCode
+
+LEFT JOIN DepartmentCategories
+ON DepartmentCategoryRelations.CompanyCode = DepartmentCategories.CompanyCode
+AND DepartmentCategoryRelations.DepartmentCategoryCode = DepartmentCategories.DepartmentCategoryCode
+
+INNER JOIN Companies
+ON Departments.CompanyCode = Companies.CompanyCode
+
+GO
+
+
+
+
+CREATE PROCEDURE ProcDepartmentCategory
+    (	
+			@companycode VARCHAR(3),
+			@departmentcategorycode INT,
+			@departmentcategorydesc VARCHAR(255),
+			@updateduserid VARCHAR(7),
+			@option INT
+    )
+AS
+
+BEGIN
+
+	-- declaring variables
+	DECLARE @results VARCHAR(255)
+		
+	-- try catch error
+	BEGIN TRY
+	
+		--Insert / Update
+		IF @option = 1
+	        IF  (EXISTS(SELECT * FROM DepartmentCategories 
+	        			WHERE CompanyCode = @companycode 
+	        			AND DepartmentCategoryCode = @departmentcategorycode))
+	        			
+	        	BEGIN
+					UPDATE DepartmentCategories SET DepartmentCategoryDesc = @departmentcategorydesc,
+						UpdatedDate = getdate(),
+						UpdatedUserID = @updateduserid
+	        			WHERE CompanyCode = @companycode 
+	        			AND DepartmentCategoryCode = @departmentcategorycode
+	        						
+	            	SET @results = 1
+	            END 
+	        ELSE
+	            BEGIN
+					    
+					INSERT INTO DepartmentCategories(CompanyCode, DepartmentCategoryDesc,
+						CreatedDate, UpdatedDate, UpdatedUserID)
+						VALUES (@companycode, @departmentcategorydesc, 
+						getdate(), getdate(), @updateduserid)
+					
+	            	SET @results = 0
+            	
+        		END
+        		
+		--Delete
+		ELSE
+			BEGIN
+			
+				IF	(EXISTS(SELECT * FROM DepartmentCategories WHERE CompanyCode = @companycode 
+	        			AND DepartmentCategoryCode = @departmentcategorycode
+						AND DeletedDate IS NULL))
+						
+					BEGIN
+						UPDATE DepartmentCategories SET DeletedDate = getdate(),
+							UpdatedDate = getdate(),
+							UpdatedUserID = @updateduserid
+							WHERE CompanyCode = @companycode 
+	        				AND DepartmentCategoryCode = @departmentcategorycode
+					END
+            		
+				ELSE
+				
+					BEGIN
+						UPDATE DepartmentCategories SET DeletedDate = NULL, 
+							UpdatedDate = getdate(),
+							UpdatedUserID = @updateduserid
+							WHERE CompanyCode = @companycode 
+	        				AND DepartmentCategoryCode = @departmentcategorycode
+					END
+								
+            		SET @results = 1
+			END
+		
+	END TRY
+	
+	--catch the error
+	BEGIN CATCH
+		SET @results = 404
+	END CATCH
+	
+	-- return the message of query
+	SELECT @results AS Results
+END
+
+
+GO
+
+IF OBJECT_ID ('dbo.ProcDepartment') IS NOT NULL
+	DROP PROCEDURE dbo.ProcDepartment
+GO
+
+CREATE PROCEDURE ProcDepartment
+    (	
+		@companycode VARCHAR(3),
+		@departmentcode VARCHAR(3),
+		@departmentname VARCHAR(40),
+		@departmentcategorycode INT,
+		@createddate DATETIME,
+		@updateddate DATETIME,
+		@updatedby VARCHAR(7),
+		@option BIT
+    )
+AS
+
+BEGIN
+
+	-- declaring variables
+	DECLARE @results VARCHAR(255), @max INT
+	
+	-- try catch error
+	BEGIN TRY
+	
+   		SET @max = (SELECT max(cast(Departments.DepartmentCode AS INT)) AS MAX FROM Departments WHERE CompanyCode = @companycode);
+	
+		--Insert / Update
+		IF @option = 1
+	        IF  (EXISTS(SELECT * FROM Departments WHERE CompanyCode = @companycode AND DepartmentCode = @departmentcode))
+	        			
+	        	BEGIN
+					UPDATE Departments SET DepartmentName = @departmentname,
+						UpdatedDate = getdate(),
+						UpdatedUserID = @updatedby
+						WHERE CompanyCode = @companycode
+						AND DepartmentCode = @departmentcode
+
+	        						
+	            	SET @results = 1
+	            END 
+	        ELSE
+	            BEGIN
+					    
+					INSERT INTO Departments(CompanyCode, DepartmentCode, DepartmentName,
+						CreatedDate, UpdatedDate, UpdatedUserID)
+						VALUES (@companycode, @max + 1, @departmentname, 
+						getdate(), getdate(), @updatedby)
+
+					
+	            	SET @results = 0
+            	
+        		END
+        		
+        --Set Department Category
+        	IF EXISTS(SELECT * FROM DepartmentCategoryRelations WHERE CompanyCode = @companycode
+						AND DepartmentCode = @departmentcode)
+				
+				BEGIN
+						
+	 				UPDATE DepartmentCategoryRelations SET DepartmentCategoryCode = @departmentcategorycode
+						WHERE CompanyCode = @companycode
+						AND DepartmentCode = @departmentcode
+				END
+			ELSE
+				BEGIN
+						
+					INSERT INTO DepartmentCategoryRelations(CompanyCode, DepartmentCode, DepartmentCategoryCode)
+						VALUES (@companycode, @departmentcode, @departmentcategorycode)
+						
+					END
+        		
+		--Delete
+		IF @option = 0
+			BEGIN
+			
+				IF	(EXISTS(SELECT * FROM Departments 
+						WHERE CompanyCode = @companycode
+						AND DepartmentCode = @departmentcode AND DeletedDate IS NULL))
+						
+					BEGIN
+						UPDATE Departments SET DeletedDate = getdate(),
+							UpdatedDate = getdate(),
+							UpdatedUserID = @updatedby
+							WHERE CompanyCode = @companycode
+							AND DepartmentCode = @departmentcode
+					END
+            		
+				ELSE
+				
+					BEGIN
+						UPDATE Departments SET DeletedDate = NULL, 
+							UpdatedDate = getdate(),
+							UpdatedUserID = @updatedby
+							WHERE CompanyCode = @companycode
+							AND DepartmentCode = @departmentcode
+					END
+								
+            		SET @results = 1
+			END
+		
+	END TRY
+	
+	--catch the error
+	BEGIN CATCH
+		SET @results = 404
+	END CATCH
+	
+	-- return the message of query
+	SELECT @results AS Results
+END
+
+
+
+
+
+
+
+
+
+
+
+GO
+

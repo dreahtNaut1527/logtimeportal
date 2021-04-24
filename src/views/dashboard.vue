@@ -155,6 +155,7 @@ export default {
         }
     },
     created() {
+        window.addEventListener("beforeunload", this.browserTabEvents)
         this.datenow = this.serverDateTime
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
         if(this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment().format('YYYY-MM-DD')) {
@@ -162,6 +163,9 @@ export default {
         } else {
             this.loadLogtime()
         }
+    },
+    beforeDestroy() {
+        window.removeEventListener("beforeunload", this.browserTabEvents)
     },
     computed: {
         filterLogtime() {
@@ -194,6 +198,10 @@ export default {
         }, 1000);
     },
     methods: {
+        browserTabEvents(events) {
+            events.preventDefault()
+            events.returnValue = ""
+        },
         loadLogtime() {
             this.loading = true
             this.logtimeData = []
@@ -249,7 +257,7 @@ export default {
                     value.TimeIn,
                     timeLogOut, //TimeOut
                     parseFloat(duration.hours.toFixed(2) - 1), //NoHrs
-                    this.setUnderTime(duration.hours), //value.Undertime, 
+                    value.Undertime, 
                     value.Tardiness, 
                     value.Overtime, 
                     value.ND, 
