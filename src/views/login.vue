@@ -90,6 +90,7 @@ export default {
     },
     methods: {
         getUserInfo() {
+            let tempEmployeeDetails = null
             let body = {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
                 values: [
@@ -101,7 +102,29 @@ export default {
                 if(Array.isArray(res.data)) {
                     this.employeeDetails = res.data[0]
                     this.userLoggedIn()
+                } else {
+                    body = {
+                        procedureName: 'ProcGetUserAccount',
+                        values: [this.username]
+                    }
+                    this.axios.post(`${this.api}/executeselect`, {data: JSON.stringify(body)}).then(res => {
+                        if(Array.isArray(res.data)) {
+                            tempEmployeeDetails = res.data[0]
+                            this.loadOraLogtime(tempEmployeeDetails.EmployeeCode)
+                        }
+                    })
                 }
+            })
+        },
+        loadOraLogtime(code) {
+            let body = {
+                logdate: this.moment(this.logtimeDate).format('MMDDYY'),
+                company: this.logtimeuserinfo.ShortName.toLowerCase(),
+                employeecode: code
+            }
+            this.axios.post(`${this.asd_sql}/logtimeemployee.php`, body).then(res => {
+                this.employeeDetails = res.data[0]
+                this.userLoggedIn()
             })
         },
         userLoggedIn() { 

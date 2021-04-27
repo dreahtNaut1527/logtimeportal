@@ -1,4 +1,5 @@
 import { mapState, mapMutations } from "vuex";
+import store from '../store'
 
 const plugins = {
     install(Vue) {
@@ -46,7 +47,7 @@ const plugins = {
                     this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
                         //Get Server Date Time
                         let serverData = res.data
-                        this.$store.commit('CHANGE_SERVERDATETTIME', serverData.SERVERDATETIME)
+                        store.commit('CHANGE_SERVERDATETTIME', serverData.SERVERDATETIME)
                     })
                 },
                 calculateDates(date1, date2) {  
