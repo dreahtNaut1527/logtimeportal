@@ -108,6 +108,17 @@
                                 <v-subheader class="font-weight-bold" v-if="logtimeuserinfo.TimeOut != null">{{moment.utc(logtimeuserinfo.TimeOut).format('HH:mm:ss')}}</v-subheader>
                                 <v-subheader class="font-weight-bold" v-else>N/A</v-subheader>
                             </v-list-item>
+                            <v-list-item>
+                                <v-list-item-content>
+                                    <v-list-item-subtitle>Logtype:</v-list-item-subtitle>
+                                </v-list-item-content>
+                                <v-spacer></v-spacer>
+                                <v-chip color="teal" dark>
+                                    {{logtimeuserinfo.LogType == 1 ? "Home" : "Office"}}
+                                    <v-icon v-if="employeesLogtimeDetails.LogType == 1" right>mdi-home-map-marker</v-icon>
+                                    <v-icon v-else right>mdi-office-building-marker</v-icon>
+                                </v-chip>
+                            </v-list-item>
                         </v-container>
                     </v-card>
                 </v-col>    
@@ -145,6 +156,7 @@
                                     <v-tooltip bottom>
                                         <template v-slot:activator="{on, attrs}">
                                             <v-btn
+                                                @click="exporttoexcel()"
                                                 color="teal"
                                                 v-on="on"
                                                 v-bind="attrs"
@@ -488,6 +500,7 @@ export default {
             page: 1,
             pageCountUser: 0,
             pageUser: 1,
+            dateToday: '',
             searchTable: '',
             dtLogtime: '',
             employeesLogtime: [],
@@ -531,11 +544,15 @@ export default {
         }
     },
     created() {
+        this.dateToday = this.serverDateTime
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
         this.loadEmployeesLogtime()
     },
     mounted() {
-        
+        setInterval(() => {
+            this.dateToday = this.moment.utc(this.dateToday).add(1, 'seconds')
+            this.$store.commit('CHANGE_SERVERDATETTIME', this.dateToday)
+        }, 1000);   
     },
     computed: {
         filterEmployeeLogtime() {
@@ -575,6 +592,31 @@ export default {
         },
     },
     methods: {
+        exporttoexcel() {
+            let body = []
+            this.filterEmployeeLogtime.forEach(rec => {
+                body.push({
+                    Date: rec.LogDateTime,
+                    Code: rec.EmployeeCode,
+                    Name: rec.EmployeeName,
+                    TimeIn: rec.TimeIn,
+                    TimeOut: rec.TimeOut
+                })
+            })
+            console.log(body);
+            this.axios.get(`${this.api}/exported`, {resposeType: 'blob'}).then(res => {
+                const blob = new Blob(
+                [res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' })
+                const aEle = document.createElement('a');     // Create a label
+                const href = window.URL.createObjectURL(blob);       // Create downloaded link
+                aEle.href = href;
+                aEle.download = 'test.xls';  // File name after download
+                document.body.appendChild(aEle);
+                aEle.click();     // Click to download
+                document.body.removeChild(aEle); // Download complete remove element
+                window.URL.revokeObjectURL(href) // Release blob object
+            })
+        },
         extractData(val) {
             let body = []
             let dtToday = this.moment.utc(this.serverDateTime).format('MMDDYYYY')

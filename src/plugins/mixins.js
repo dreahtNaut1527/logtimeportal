@@ -13,6 +13,7 @@ const plugins = {
                 }
             },
             created() {
+                this.getServerDateTime()
                 this.api = process.env.NODE_ENV == 'production' ? process.env.VUE_APP_URL : process.env.VUE_APP_LOCAL_URL
                 this.axios.defaults.headers.common['master-api'] = process.env.VUE_APP_URL_KEY
             },
@@ -41,6 +42,13 @@ const plugins = {
                      'CHANGE_CONNECTION',
                      'CHANGE_SERVERDATETTIME'
                 ]),
+                getServerDateTime() {
+                    this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
+                        //Get Server Date Time
+                        let serverData = res.data
+                        this.$store.commit('CHANGE_SERVERDATETTIME', serverData.SERVERDATETIME)
+                    })
+                },
                 calculateDates(date1, date2) {  
         
                     let years = date1.diff(date2, 'year');
