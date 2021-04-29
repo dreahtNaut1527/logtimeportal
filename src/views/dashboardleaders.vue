@@ -544,9 +544,13 @@ export default {
         }
     },
     created() {
+        window.addEventListener("beforeunload", this.browserTabEvents)
         this.dateToday = this.serverDateTime
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
         this.loadEmployeesLogtime()
+    },
+    beforeDestroy() {
+        window.removeEventListener("beforeunload", this.browserTabEvents)
     },
     mounted() {
         setInterval(() => {
@@ -592,6 +596,10 @@ export default {
         },
     },
     methods: {
+        browserTabEvents(events) {
+            events.preventDefault()
+            events.returnValue = ""
+        },
         exporttoexcel() {
             let body = []
             this.filterEmployeeLogtime.forEach(rec => {
