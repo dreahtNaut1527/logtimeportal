@@ -70,26 +70,7 @@ const plugins = {
                     let seconds = date1.diff(date2, 'seconds');
         
                     return {years, months, days, hours, minutes, seconds};
-                },
-                setOvertime(hours) {
-                    let decimal = (hours - 8).toFixed(2)
-        
-                    if(decimal.substr(2, 1) > 5) {
-                        return parseFloat((decimal - 0.1).toFixed(2))
-                    } else {
-                        return (hours) > 8 ? parseFloat((hours - 8).toFixed(2)) : 0
-                    }
-                },
-                setUnderTime(hours) {
-                    return (hours - 8).toFixed(2) > 0 ? 0 : (hours - 8).toFixed(2)
-                },
-                // getWeather() {
-                //     // let url = "https://maps.googleapis.com/maps/api/geocode/json?address=Cavite&key=AIzaSyCuugDMliUtuYZ1tT2PZbgB_LMvOYi0wFU"
-                //     let url = "https://api.openweathermap.org/data/2.5/forecast?lang=zh_cn&units=metric&appid=c231437c38aeccd6596f746f3e95b155&q=Cavite"
-                //     this.axios.get(url).then(res => {
-                //         console.log(res.data)
-                //     }).catch(err => console.log(err))
-                // }
+                }
             }
         })
     }

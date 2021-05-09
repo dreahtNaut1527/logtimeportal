@@ -15,6 +15,7 @@
                :label="label"
                color="teal"
                append-icon="mdi-calendar"
+               @click:append="menuDialog = true"
                v-bind="attrs"
                v-on="on"
                hide-details

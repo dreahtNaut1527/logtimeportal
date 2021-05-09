@@ -158,8 +158,8 @@ export default {
         window.addEventListener("beforeunload", this.browserTabEvents)
         this.datenow = this.serverDateTime
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
-        if(this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment().format('YYYY-MM-DD')) {
-            this.updateLogtimeData()
+        if(this.moment.utc(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment.utc(this.datenow).format('YYYY-MM-DD')) {
+            this.updateLogtimeData(this.logtimeuserinfo)
         } else {
             this.loadLogtime()
         }

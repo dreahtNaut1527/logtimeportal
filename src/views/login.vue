@@ -47,12 +47,12 @@
                                             append-icon="mdi-lock"
                                             rounded
                                             outlined
-                                            @keypress.enter="getUserInfo()"
+                                            @keypress.enter="userLoggedIn()"
                                         ></v-text-field>
                                     </v-form>
                                     <v-card-actions class="ma-0 pa-0">
                                         <v-spacer></v-spacer>
-                                        <v-btn class="px-7" @click="getUserInfo()" color="teal darken-1" dark >Login</v-btn>
+                                        <v-btn class="px-7" @click="userLoggedIn()" color="teal darken-1" dark >Login</v-btn>
                                     </v-card-actions>
                                 </v-container>
                             </v-col>
@@ -89,8 +89,7 @@ export default {
         this.$store.commit('CHANGE_SERVERDATETTIME', '')
     },
     methods: {
-        getUserInfo() {
-            let tempEmployeeDetails = null
+        userLoggedIn() { 
             let body = {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
                 values: [
@@ -99,65 +98,30 @@ export default {
                 ] 
             }
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
-                if(Array.isArray(res.data)) {
-                    this.employeeDetails = res.data[0]
-                    this.userLoggedIn()
-                } else {
-                    body = {
-                        procedureName: 'ProcGetUserAccount',
-                        values: [this.username]
-                    }
-                    this.axios.post(`${this.api}/executeselect`, {data: JSON.stringify(body)}).then(res => {
-                        if(Array.isArray(res.data)) {
-                            tempEmployeeDetails = res.data[0]
-                            this.loadOraLogtime(tempEmployeeDetails.EmployeeCode)
-                        }
-                    })
-                }
-            })
-        },
-        loadOraLogtime(code) {
-            let body = {
-                logdate: this.moment(this.logtimeDate).format('MMDDYY'),
-                company: this.logtimeuserinfo.ShortName.toLowerCase(),
-                employeecode: code
-            }
-            this.axios.post(`${this.asd_sql}/logtimeemployee.php`, body).then(res => {
                 this.employeeDetails = res.data[0]
-                this.userLoggedIn()
-            })
-        },
-        userLoggedIn() { 
-            // check if record exists
-            if(this.employeeDetails != undefined) {
-                // check leave
-                if(!this.checkLeave()) {
-                    this.alert = true
-                    this.alertText = `You are currently on ${this.employeeDetails.LeaveDesc} leave`
-                    this.clearVariables()
-                } else {
-                    // check password
-                    if(this.md5(this.password) == this.employeeDetails.Password) {
-                        this.setTimeIn(this.employeeDetails)
-                    } else {
+                // check if record exists
+                if(this.employeeDetails != undefined) {
+                    // check leave
+                    if(!this.checkLeave()) {
                         this.alert = true
-                        this.alertText = 'Username and/or Password do not match. Please try again'
+                        this.alertText = `You are currently on ${this.employeeDetails.LeaveDesc} leave`
+                    } else {
+                        // check password
+                        if(this.md5(this.password) == this.employeeDetails.Password) {
+                            this.setTimeIn(this.employeeDetails)
+                        } else {
+                            this.alert = true
+                            this.alertText = 'Username and/or Password do not match. Please try again'
+                        }
                     }
+                } else {
+                    this.alert = true
+                    this.alertText = 'Account does not exists. Please contact your administrator'
                 }
-            } else {
-                this.alert = true
-                this.alertText = 'Account does not exists. Please contact your administrator'
-            }
-        },
-        clearVariables() {
-            this.alert = false
-            this.alertText = null
-            this.employeeDetails = null
-            this.username = ''
-            this.password = ''
+            })
         },
         checkLeave() {
-            if(this.employeeDetails.Leave != '0') {
+            if(this.employeeDetails.Leave == '1') {
                 return false
             } else {
                 return true
@@ -171,105 +135,99 @@ export default {
             }
         },
         setTimeIn(value) {
-            // let duration = null
-            let tempEmployeeData = null
-            let dtToday = null
-            let serverData = {}
             this.loading = true
+            let dtToday = null
             let startShift = this.moment.utc(value.StartTime)
             let endShift = this.moment.utc(value.EndTime)
-
-            this.axios.get(`${this.asd_sql}/getclientip.php`).then(res => {
-                //Get Server Date Time
-                serverData = res.data
-                this.$store.commit('CHANGE_SERVERDATETTIME', serverData.SERVERDATETIME)
                 
-                dtToday = this.moment.utc(this.serverDateTime)
+            dtToday = this.moment.utc(this.serverDateTime)
 
-                // format shift for ORACLE
-                value.StartTime = `${dtToday.format('YYYY-MM-DD')} ${startShift.format('HH:mm:ss')}`
-                value.EndTime = `${dtToday.format('YYYY-MM-DD')} ${endShift.format('HH:mm:ss')}`
-
-                // duration = this.calculateDates(dtToday, this.moment(value.StartTime))
-                
-                // Check if employee already logged in 
-                if(value.TimeIn == null) {                
-                    let body = {
-                        procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-                        values: [
-                            `LT${dtToday.format('MMYYYY')}`, 
-                            value.ShortName, 
-                            `${value.EmployeeCode}${dtToday.format('MMDDYYYY')}`,
-                            value.EmployeeCode, 
-                            dtToday.format('YYYY-MM-DD'), // LogDateTime
-                            dtToday.format('YYYY-MM-DD HH:mm:ss'), // Time In
-                            value.TimeOut, 
-                            value.NoHrs, 
-                            value.Undertime, 
-                            value.Tardiness,
-                            value.Overtime, 
-                            value.ND, 
-                            value.Shift, 
-                            1, // SW1
-                            value.SW2,
-                            value.UserAcct, 
-                            value.UserAcctO, 
-                            value.UserTime, 
-                            value.UserTimeO, 
-                            '121', // Manual Rem
-                            value.ManualRemO, 
-                            value.ND1, 
-                            value.ND2, 
-                            value.NoHrs1, 
-                            value.PayCode,
-                            value.DayOff,
-                            value.OTCode,
-                            1, // Meal
-                            value.MealOCC,
-                            value.PostOT,
-                            value.Leave,
-                            value.TransIn,
-                            value.TransOut,
-                            value.DepartmentCode,
-                            value.SectionCode,
-                            value.TeamCode,
-                            value.DesignationCode,
-                            1
-                        ]
-                    }
-                    // console.log(body)
-                    this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-                    setTimeout(() => {
-                        body = {
-                            procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
-                            values: [
-                                this.moment().format('YYYY-MM-DD'),
-                                this.username
-                            ] 
-                        }
-                        this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
-                            if(Array.isArray(res.data)) {
-                                tempEmployeeData = res.data[0]
-                                this.$store.commit('CHANGE_USER_INFO', tempEmployeeData)
-                                if(value.UserLevel == 0) {
-                                    this.$router.push('/dashboard')
-                                } else {
-                                    this.$router.push('/dashboardleaders')
-                                }
-                            }
-                        })
-                        this.loading = false
-                    }, 2000)
-                } else {
-                    this.$store.commit('CHANGE_USER_INFO', value)
-                    if(value.UserLevel == 0) {
-                        this.$router.push('/dashboard')
-                    } else {
-                        this.$router.push('/dashboardleaders')
-                    }
+            // format shift for ORACLE
+            value.StartTime = `${dtToday.format('YYYY-MM-DD')} ${startShift.format('HH:mm:ss')}`
+            value.EndTime = `${dtToday.format('YYYY-MM-DD')} ${endShift.format('HH:mm:ss')}`
+            
+            // Check if employee already logged in 
+            if(value.TimeIn == null) {                
+                let body = {
+                    procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                    values: [
+                        `LT${dtToday.format('MMYYYY')}`, 
+                        value.ShortName, 
+                        `${value.EmployeeCode}${dtToday.format('MMDDYYYY')}`,
+                        value.EmployeeCode, 
+                        dtToday.format('YYYY-MM-DD'), // LogDateTime
+                        dtToday.format('YYYY-MM-DD HH:mm:ss'), // Time In
+                        value.TimeOut, 
+                        value.NoHrs, 
+                        value.Undertime, 
+                        value.Tardiness,
+                        value.Overtime, 
+                        value.ND, 
+                        value.Shift, 
+                        1, // SW1
+                        value.SW2,
+                        value.UserAcct, 
+                        value.UserAcctO, 
+                        value.UserTime, 
+                        value.UserTimeO, 
+                        '121', // Manual Rem
+                        value.ManualRemO, 
+                        value.ND1, 
+                        value.ND2, 
+                        value.NoHrs1, 
+                        value.PayCode,
+                        value.DayOff,
+                        value.OTCode,
+                        1, // Meal
+                        value.MealOCC,
+                        value.PostOT,
+                        value.Leave,
+                        value.TransIn,
+                        value.TransOut,
+                        value.DepartmentCode,
+                        value.SectionCode,
+                        value.TeamCode,
+                        value.DesignationCode,
+                        1
+                    ]
                 }
+                // console.log(body)
+                // Update Logtime Table
+                this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+                setTimeout(() => {
+                    this.getLogTimeTableRecord()
+                    this.loading = false
+                }, 2000)
+            } else {
+                this.getLogTimeTableRecord()
+            }
+        },
+        getLogTimeTableRecord() {
+            let tempEmployeeData = null
+            let body = {
+                procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
+                values: [
+                    this.moment().format('YYYY-MM-DD'),
+                    this.username
+                ] 
+            }
+            this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
+                tempEmployeeData = res.data[0]
+                this.$store.commit('CHANGE_USER_INFO', tempEmployeeData)
                 this.$store.commit('CHANGE_USER_LOGGING', true)
+                if(tempEmployeeData.UserLevel == 0) {
+                    this.$router.push('/dashboard')
+                } else {
+                    this.$router.push('/dashboardleaders')
+                }
             })
+        },
+        clearVariables() {  
+            this.alert = false
+            this.alertText = null
+            this.employeeDetails = null
+            this.username = ''
+            this.password = ''
         },
     },
     watch: {

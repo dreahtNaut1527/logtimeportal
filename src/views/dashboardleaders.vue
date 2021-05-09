@@ -115,7 +115,7 @@
                                 <v-spacer></v-spacer>
                                 <v-chip color="teal" dark>
                                     {{logtimeuserinfo.LogType == 1 ? "Home" : "Office"}}
-                                    <v-icon v-if="employeesLogtimeDetails.LogType == 1" right>mdi-home-map-marker</v-icon>
+                                    <v-icon v-if="logtimeuserinfo.LogType == 1" right>mdi-home-map-marker</v-icon>
                                     <v-icon v-else right>mdi-office-building-marker</v-icon>
                                 </v-chip>
                             </v-list-item>
@@ -138,10 +138,16 @@
                                         dense
                                     ></v-text-field>
                                     <datePicker :menu="dateDialog" :dateValue.sync="dtLogtime" dateLabel="Logdate" /> 
+                                    <v-checkbox
+                                        v-model="workFromHome"
+                                        label="Work From Home"
+                                        color="teal"
+                                        hide-details
+                                    ></v-checkbox>
                                     <v-tooltip bottom>
                                         <template v-slot:activator="{ on, attrs }">
                                             <v-btn 
-                                                @click="extractData(filterEmployeeLogtime)" 
+                                                @click="extractData(employeesLogtime)" 
                                                 color="teal" 
                                                 v-on="on"
                                                 v-bind="attrs"
@@ -234,7 +240,16 @@
                                     <v-list-item-subtitle>{{employeesLogtimeDetails.DesignationName}}</v-list-item-subtitle>
                                 </v-list-item-content>
                                 <v-list-item-avatar v-if="employeesLogtimeDetails.EmployeeCode != undefined" size="60">
-                                    <v-img :src="`${photo}/${employeesLogtimeDetails.EmployeeCode}.jpg`"></v-img>
+                                    <v-img :src="`${photo}/${employeesLogtimeDetails.EmployeeCode}.jpg`">
+                                        <template v-slot:placeholder>
+                                            <v-sheet>
+                                                <v-skeleton-loader
+                                                    class="mx-auto"
+                                                    type="image"
+                                                ></v-skeleton-loader>
+                                            </v-sheet>
+                                        </template>
+                                    </v-img>
                                 </v-list-item-avatar>
                             </v-list-item>
                         </v-col>
@@ -290,7 +305,7 @@
                                     </v-row>
                                 </v-container>
                             </v-card>
-                            <v-card class="mt-2" outlined>
+                            <v-card v-if="employeesLogtimeDetails.LogType == 1" class="mt-2" outlined>
                                 <v-subheader>Manual Encode:</v-subheader>
                                 <v-divider></v-divider>
                                 <v-container class="mb-n5">
@@ -378,60 +393,12 @@
                                     ></v-textarea>
                                 </v-container>
                             </v-card>
-                            <!-- <v-card-text> -->
-                                <!-- <v-row  class="mt-n5" dense>
-                                    <v-col cols="12" md="6"> -->
-                                            <!-- <v-list-item>
-                                                <v-list-item-content>
-                                                    <v-list-item-subtitle>Hours:</v-list-item-subtitle>
-                                                </v-list-item-content>
-                                                <v-subheader class="font-weight-bold">{{employeesLogtimeDetails.NoHrs}}</v-subheader>
-                                            </v-list-item>
-                                            <v-list-item>
-                                                <v-list-item-content>
-                                                    <v-list-item-subtitle>Overtime:</v-list-item-subtitle>
-                                                </v-list-item-content>
-                                                <v-subheader class="font-weight-bold">{{employeesLogtimeDetails.Overtime}}</v-subheader>
-                                            </v-list-item>
-                                            <v-list-item>
-                                                <v-list-item-content>
-                                                    <v-list-item-subtitle>Undertime:</v-list-item-subtitle>
-                                                </v-list-item-content>
-                                                <v-subheader class="font-weight-bold">{{employeesLogtimeDetails.Undertime}}</v-subheader>
-                                            </v-list-item>
-                                            <v-list-item>
-                                                <v-list-item-content>
-                                                    <v-list-item-subtitle>Tardiness:</v-list-item-subtitle>
-                                                </v-list-item-content>
-                                                <v-subheader class="font-weight-bold">{{employeesLogtimeDetails.Tardiness}}</v-subheader>
-                                            </v-list-item> -->
-                                    <!-- </v-col>
-                                    <v-col cols="12" md="6">
-                                        <v-checkbox 
-                                            v-model="isHalfDay" 
-                                            @change="setHalfDay(employeesLogtimeDetails)"
-                                            label="Half Day" 
-                                            color="teal" 
-                                            dense
-                                        ></v-checkbox>
-                                        <v-textarea
-                                            v-model="employeesLogtimeDetails.Remarks"
-                                            :disabled="!isHalfDay"
-                                            :height="175"
-                                            color="teal"
-                                            label="Remarks"
-                                            outlined    
-                                        ></v-textarea>
-                                    </v-col>
-                                </v-row> -->
-                            <!-- </v-card-text> -->
                         </v-col>
                     </v-row>
-                    <v-card-actions>
+                    <v-card-actions v-if="employeesLogtimeDetails.LogType == 1">
                         <v-spacer></v-spacer>
                         <v-btn @click="dialog = false" text>Cancel</v-btn>
-                        <!-- <v-btn v-if="employeesLogtimeDetails.LogType == 1" @click="saveEmployeeLogtime(employeesLogtimeDetails)" color="teal" dark>Save</v-btn> -->
-                        <v-btn v-if="employeesLogtimeDetails.LogType == 1" @click="saveEmployeeLogtimeData(employeesLogtimeDetailsManual)" color="teal" dark>Save</v-btn>
+                        <v-btn @click="saveEmployeeLogtimeData(employeesLogtimeDetailsManual)" color="teal" dark>Save</v-btn>
                     </v-card-actions>
                 </v-container>
             </v-card>
@@ -487,19 +454,22 @@ import timePicker from '@/components/timepicker'
 export default {
     data() {
         return {
+            cutOffDate: null,
             timeIn: null,
             timeOut: null,
             isHalfDay: false,
             dateDialog: false,
+            workFromHome: false,
             logtimeDialog: false,
             timeInDialog: false,
             timeOutDialog: false,
             dialog: false,
             loading: true,
             pageCount: 0,
-            page: 1,
             pageCountUser: 0,
+            page: 1,
             pageUser: 1,
+            cutOff: 1,
             dateToday: '',
             searchTable: '',
             dtLogtime: '',
@@ -561,27 +531,52 @@ export default {
     computed: {
         filterEmployeeLogtime() {
             return this.employeesLogtime.filter(rec => {
-                return (
-                    this.moment(rec.LogDateTime).format('YYYY-MM-DD').includes(this.dtLogtime) &&
-                    rec.EmployeeCode != this.logtimeuserinfo.EmployeeCode
-                )
+                if(this.workFromHome) {
+                    return (
+                        rec.LogType == 1 &&
+                        this.moment(rec.LogDateTime).format('YYYY-MM-DD').includes(this.dtLogtime) &&
+                        rec.EmployeeCode != this.logtimeuserinfo.EmployeeCode
+                    )
+                } else {
+                    return (
+                        this.moment(rec.LogDateTime).format('YYYY-MM-DD').includes(this.dtLogtime) &&
+                        rec.EmployeeCode != this.logtimeuserinfo.EmployeeCode
+                    )
+                }
             })
         },
         filterEmployeeLogtimeUser() {
             return this.employeesLogtime.filter(rec => {
-                return (
-                    this.moment(rec.LogDateTime).format('YYYY-MM-DD') != this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') &&
-                    rec.EmployeeCode == this.logtimeuserinfo.EmployeeCode
-                )
+                if(this.workFromHome) {
+                    return (
+                        rec.LogType == 1 &&
+                        this.moment(rec.LogDateTime).format('YYYY-MM-DD') != this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') &&
+                        rec.EmployeeCode == this.logtimeuserinfo.EmployeeCode
+                    )
+                } else {
+                    return (
+                        this.moment(rec.LogDateTime).format('YYYY-MM-DD') != this.moment(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') &&
+                        rec.EmployeeCode == this.logtimeuserinfo.EmployeeCode
+                    )
+                }
             })
         },
         filterTotalPresent() {
             return this.employeesLogtime.filter(rec => {
-                return (
+                if(this.workFromHome) {
+                    return (
+                        rec.LogType == 1 &&
                         this.moment(rec.LogDateTime).format('YYYY-MM-DD').includes(this.dtLogtime) &&
                         rec.EmployeeCode != this.logtimeuserinfo.EmployeeCode &&
                         rec.TimeIn != null
                     )
+                } else {
+                    return (
+                        this.moment(rec.LogDateTime).format('YYYY-MM-DD').includes(this.dtLogtime) &&
+                        rec.EmployeeCode != this.logtimeuserinfo.EmployeeCode &&
+                        rec.TimeIn != null
+                    )
+                }
             })
         },
         filterTotalAbsent() {
@@ -601,44 +596,23 @@ export default {
             events.returnValue = ""
         },
         exporttoexcel() {
-            let body = []
-            this.filterEmployeeLogtime.forEach(rec => {
-                body.push({
-                    Date: rec.LogDateTime,
-                    Code: rec.EmployeeCode,
-                    Name: rec.EmployeeName,
-                    TimeIn: rec.TimeIn,
-                    TimeOut: rec.TimeOut
-                })
-            })
-            console.log(body);
-            this.axios.get(`${this.api}/exported`, {resposeType: 'blob'}).then(res => {
-                const blob = new Blob(
-                [res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8' })
-                const aEle = document.createElement('a');     // Create a label
-                const href = window.URL.createObjectURL(blob);       // Create downloaded link
-                aEle.href = href;
-                aEle.download = 'test.xls';  // File name after download
-                document.body.appendChild(aEle);
-                aEle.click();     // Click to download
-                document.body.removeChild(aEle); // Download complete remove element
-                window.URL.revokeObjectURL(href) // Release blob object
-            })
+            this.swal.fire('Information', 'Function is not yet available', 'info')
         },
         extractData(val) {
             let body = []
-            let dtToday = this.moment.utc(this.serverDateTime).format('MMDDYYYY')
             val.forEach(rec => [
                 body.push({
                     Code: rec.EmployeeCode.toString(),
+                    LogDate: rec.LogDateTime,
                     Name: rec.EmployeeName,
                     TimeIn: rec.TimeIn == null ? '' : this.moment.utc(rec.TimeIn).format('HH:mm:ss'),
                     TimeOut: rec.TimeOut == null ? '' : this.moment.utc(rec.TimeOut).format('HH:mm:ss'),
+                    Hours: rec.NoHrs,
                     LogType: rec.LogType == 1 ? 'Work From Home' : 'Office'
                 })
             ])  
             this.axios.post(`${this.api}/exportcsv`, {data: JSON.stringify(body)}).then(res => {
-                this.jsfiledownload(res.data, `Employee Logtime - ${dtToday}.csv`)
+                this.jsfiledownload(res.data, `${this.logtimeuserinfo.DepartmentName} Department.csv`)
             })
         },
         loadEmployeesLogtime() {
@@ -748,7 +722,7 @@ export default {
                 if(this.isHalfDay) {
                     // Set Undertime Value
                     this.timeOut = timeInVal.add(4, 'hours')
-                    this.timeOut = timeInVal.set({second: 0}).format('HH:mm')
+                    this.timeOut = timeInVal.set({second: 0}).format('HH:mm:ss')
                     timeOutVal = this.moment.utc(`${dtToday} ${this.timeOut}`, 'YYYY-MM-DD HH:mm:ss')
                     val.TimeIn = timeInVal.format('YYYY-MM-DD HH:mm:ss')
                     val.timeOut = timeOutVal.format('YYYY-MM-DD HH:mm:ss')
@@ -764,8 +738,8 @@ export default {
         setLogtimeValues() {
             let duration = null
             let dtToday = this.moment.utc(this.serverDateTime).format('YYYY-MM-DD')
-            let timeInVal = this.moment.utc(`${dtToday} ${this.timeIn}:00`)
-            let timeOutVal = this.moment.utc(`${dtToday} ${this.timeOut}:00`)
+            let timeInVal = this.moment.utc(`${dtToday} ${this.timeIn}`)
+            let timeOutVal = this.moment.utc(`${dtToday} ${this.timeOut}`)
             
             if(this.timeOut != null && timeInVal.format('HH') < timeOutVal.format('HH')) {
                 duration = this.calculateDates(timeOutVal, timeInVal)
@@ -773,8 +747,8 @@ export default {
                     TimeIn: `${dtToday} ${this.timeIn}`,
                     TimeOut: `${dtToday} ${this.timeOut}`,
                     NoHrs: (duration.hours) >= 8 ? 8 : parseFloat((duration.hours).toFixed(2)),
-                    Overtime: this.setOvertime(duration.hours),
-                    Undertime: this.setUnderTime(duration.hours),
+                    Overtime: (duration.hours - 8).toFixed(2),
+                    Undertime: 0,
                     Tardiness: 0
                 })
             } else {
@@ -825,6 +799,21 @@ export default {
                         this.swal.fire('Confirmed!', 'Record has been Uploaded to Admin.', 'success')
                     }
                 })
+            }
+        },
+        getCutOffValues(val) {
+            let dayVal = this.moment.utc(val).format('DD')
+            if(dayVal >= 6 && dayVal <= 20) {
+                let lastDate = {
+                    Year: this.moment.utc(val).format('YYYY'),
+                    Month: this.moment.utc(val).subtract(1, 'month').format('MM'),
+                    Day: this.moment.utc(val).subtract(1, 'month').daysInMonth('D')
+                } 
+                this.cutOff = 2
+                this.cutOffDate = `${lastDate.Year}-${lastDate.Month}-${lastDate.Day}`
+            } else {
+                this.cutOff = 1
+                this.cutOffDate = this.moment.utc(val).startOf('month').add(14, 'd').format('YYYY-MM-DD')
             }
         },
         updateORALogtime(value) {
@@ -959,7 +948,8 @@ export default {
                 this.clearVariables()
             }
         },
-        dtLogtime() {
+        dtLogtime(val) {
+            this.getCutOffValues(val)
             if(this.filterEmployeeLogtime.length == 0) {
                 this.loadEmployeesLogtime()
             }

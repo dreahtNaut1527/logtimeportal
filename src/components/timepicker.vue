@@ -12,6 +12,7 @@
                     v-model="time"
                     :label="label"
                     append-icon="mdi-clock-outline"
+                    @click:append="menuDialog = true"
                     color="teal"
                     v-bind="attrs"
                     v-on="on"
