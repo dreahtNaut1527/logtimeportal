@@ -9,6 +9,11 @@
 import navdrawer from "@/components/navdrawer";
 
 export default {
+    mounted() {
+        setInterval(() => {
+            this.checkAppVersion()
+        }, 1000);
+    },
     components: {
         navdrawer
     }

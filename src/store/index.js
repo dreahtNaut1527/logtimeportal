@@ -8,12 +8,8 @@ export default new Vuex.Store({
   state: {
     logtimeuserinfo: {},
     isLoggedIn: false,
-    darkMode: false,
-    searchData: '',
-    navDrawerVal: false,
-    emplcode: '',
-    isEmpEdit: false,
     isConnect: true,
+    appVersion: null,
     serverDateTime: ''
   },
   plugins: [
@@ -26,23 +22,11 @@ export default new Vuex.Store({
     CHANGE_USER_LOGGING: (state, data) => {
       state.isLoggedIn = data
     },
-    CHANGE_THEME: (state, data) => {
-      state.darkMode = data
-    },
-    CHANGE_SEARCHING: (state, data) => {
-      state.searchData = data
-    },
-    CHANGE_NAVDRAWER: (state, data) => {
-      state.navDrawerVal = data
-    },
-    CHANGE_EMPLCODE: (state, data) => {
-      state.emplcode = data
-    },
-    CHANGE_EMP_EDIT: (state, data) => {
-      state.isEmpEdit = data
-    },
     CHANGE_CONNECTION: (state, data) => {
       state.isConnect = data
+    },
+    CHANGE_APP_VERSION: (state, data) => {
+      state.appVersion = data
     },
     CHANGE_SERVERDATETTIME: (state, data) => {
       state.serverDateTime = data

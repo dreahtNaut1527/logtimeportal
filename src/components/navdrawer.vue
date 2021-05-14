@@ -78,9 +78,10 @@ export default {
                 this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
             }
             this.$store.commit('CHANGE_USER_INFO', {})
-            this.$store.commit('CHANGE_SERVERDATETTIME', null)
+            this.$store.commit('CHANGE_USER_LOGGING', false)
+            this.$store.commit('CHANGE_SERVERDATETTIME', '')
             this.$router.push("/")
         }
     }
 }
-</script>   
+</script>       

@@ -9,6 +9,7 @@ const plugins = {
                     // api: process.env.VUE_APP_LOCAL_URL,
                     // api: process.env.VUE_APP_URL,
                     api: null,
+                    server: process.env.VUE_APP_SERVER,
                     asd_sql: process.env.VUE_APP_ASD_SQL,
                     photo: process.env.VUE_APP_PHOTO
                 }
@@ -22,12 +23,8 @@ const plugins = {
                 ...mapState([
                      'logtimeuserinfo', 
                      'isLoggedIn', 
-                     'darkMode', 
-                     'searchData',
-                     'navDrawerVal',
-                     'emplcode',
-                     'isEmpEdit',
                      'isConnect',
+                     'appVersion',
                      'serverDateTime'
                 ])
             },
@@ -35,12 +32,8 @@ const plugins = {
                 ...mapMutations([
                      'CHANGE_USER_INFO', 
                      'CHANGE_USER_LOGGING', 
-                     'CHANGE_THEME', 
-                     'CHANGE_SEARCHING',
-                     'CHANGE_NAVDRAWER',
-                     'CHANGE_EMPLCODE',
-                     'CHANGE_EMP_EDIT',
                      'CHANGE_CONNECTION',
+                     'CHANGE_APP_VERSION',
                      'CHANGE_SERVERDATETTIME'
                 ]),
                 getServerDateTime() {
@@ -70,7 +63,22 @@ const plugins = {
                     let seconds = date1.diff(date2, 'seconds');
         
                     return {years, months, days, hours, minutes, seconds};
-                }
+                },
+                checkAppVersion() {
+                     let version = null
+                     this.axios.get(`${this.server}/appversion`).then(res => {
+                          version = res.data
+                          if(version != this.appVersion) {
+                                this.$store.commit('CHANGE_APP_VERSION', version)
+                                this.$store.commit('CHANGE_USER_INFO', {})
+                                this.$store.commit('CHANGE_USER_LOGGING', false)
+                                this.$store.commit('CHANGE_SERVERDATETTIME', '')
+                                if(this.$route.name != 'login') {
+                                        this.$router.push('/')
+                                }
+                          }
+                     })
+                },
             }
         })
     }

@@ -398,7 +398,12 @@
                     <v-card-actions v-if="employeesLogtimeDetails.LogType == 1">
                         <v-spacer></v-spacer>
                         <v-btn @click="dialog = false" text>Cancel</v-btn>
-                        <v-btn @click="saveEmployeeLogtimeData(employeesLogtimeDetailsManual)" color="teal" dark>Save</v-btn>
+                        <v-btn 
+                            v-if="employeesLogtimeDetailsManual.IsAdminUpload == 0"
+                            @click="saveEmployeeLogtimeData(employeesLogtimeDetailsManual)" 
+                            color="teal" 
+                            dark
+                        >Save</v-btn>
                     </v-card-actions>
                 </v-container>
             </v-card>
@@ -492,6 +497,7 @@ export default {
                 IsHalfDay: false,
                 Remarks: null,
                 UpdatedUserId: null,
+                IsAdminUpload: 0
             },
             headers: [
                 {text: 'Code', value: 'EmployeeCode'},
@@ -668,9 +674,9 @@ export default {
         viewEmployeeLogtimeDetails(val) {
             this.dialog = true
             this.employeesLogtimeDetails = val
-            this.employeesLogtimeDetailsManual = {
+            Object.assign(this.employeesLogtimeDetailsManual,{
                 ShortName: val.ShortName,
-                LogDateTime: val.LogDateTime,
+                LogDateTime: this.moment(val.LogDateTime).format('YYYY-MM-DD'),
                 EmployeeCode: val.EmployeeCode,
                 TimeIn: val.AdminTimeIn, 
                 TimeOut: val.AdminTimeOut,
@@ -683,11 +689,12 @@ export default {
                 ManualRem: val.ManualRem,
                 ManualRemO: val.ManualRemO,
                 IsHalfDay: val.IsHalfDay,
-                Remarks: val.Remakrs,
+                Remarks: val.Remarks,
                 UpdatedUserId: this.logtimeuserinfo.EmployeeCode,
-            }
-            // this.timeIn = val.TimeIn == null ? null : this.moment.utc(val.TimeIn).format('HH:mm:ss')
-            // this.timeOut = val.TimeOut == null ? null : this.moment.utc(val.TimeOut).format('HH:mm:ss')
+                IsAdminUpload: val.IsAdminUpload
+            })
+            this.timeIn = val.AdminTimeIn == null ? null : this.moment.utc(val.AdminTimeIn).format('HH:mm:ss')
+            this.timeOut = val.AdminTimeOut == null ? null : this.moment.utc(val.AdminTimeOut).format('HH:mm:ss')
         },
         clearVariables() {
             this.timeIn = null
@@ -737,9 +744,9 @@ export default {
         },
         setLogtimeValues() {
             let duration = null
-            let dtToday = this.moment.utc(this.serverDateTime).format('YYYY-MM-DD')
-            let timeInVal = this.moment.utc(`${dtToday} ${this.timeIn}`)
-            let timeOutVal = this.moment.utc(`${dtToday} ${this.timeOut}`)
+            let dtToday = this.moment(this.employeesLogtimeDetailsManual.LogDateTime).format('YYYY-MM-DD')
+            let timeInVal = this.timeIn ? this.moment.utc(`${dtToday} ${this.timeIn}`) : null
+            let timeOutVal = this.timeOut ? this.moment.utc(`${dtToday} ${this.timeOut}`) : null
             
             if(this.timeOut != null && timeInVal.format('HH') < timeOutVal.format('HH')) {
                 duration = this.calculateDates(timeOutVal, timeInVal)
@@ -747,7 +754,7 @@ export default {
                     TimeIn: `${dtToday} ${this.timeIn}`,
                     TimeOut: `${dtToday} ${this.timeOut}`,
                     NoHrs: (duration.hours) >= 8 ? 8 : parseFloat((duration.hours).toFixed(2)),
-                    Overtime: (duration.hours - 8).toFixed(2),
+                    Overtime: (duration.hours - 9).toFixed(2),
                     Undertime: 0,
                     Tardiness: 0
                 })
@@ -801,25 +808,38 @@ export default {
                 })
             }
         },
-        getCutOffValues(val) {
-            let dayVal = this.moment.utc(val).format('DD')
+        getCutOffValues(val, code) {
+            let lastDate = {}
+            let dayVal = this.moment(val).format('DD')
             if(dayVal >= 6 && dayVal <= 20) {
-                let lastDate = {
-                    Year: this.moment.utc(val).format('YYYY'),
-                    Month: this.moment.utc(val).subtract(1, 'month').format('MM'),
-                    Day: this.moment.utc(val).subtract(1, 'month').daysInMonth('D')
+                lastDate = {
+                    Year: this.moment(val).format('YYYY'),
+                    Month: this.moment(val).subtract(1, 'month').format('MM'),
+                    Day: this.moment(val).subtract(1, 'month').daysInMonth('D')
                 } 
-                this.cutOff = 2
-                this.cutOffDate = `${lastDate.Year}-${lastDate.Month}-${lastDate.Day}`
+                return {
+                    cutOff: 2,
+                    cutOffDate: `${lastDate.Year}-${lastDate.Month}-${lastDate.Day}`,
+                    serialNo: `2${this.moment(val).format('YY')}${lastDate.Month}${code}`
+                }
             } else {
-                this.cutOff = 1
-                this.cutOffDate = this.moment.utc(val).startOf('month').add(14, 'd').format('YYYY-MM-DD')
+                lastDate = {
+                    Year: this.moment(val).format('YYYY'),
+                    Month: this.moment(val).add(1, 'month').format('MM'),
+                    Day: this.moment(val).add(1, 'month').daysInMonth('D')
+                } 
+                return {
+                    cutOff: 1,
+                    cutOffDate: this.moment(`${lastDate.Year}-${lastDate.Month}-${lastDate.Day}`).startOf('month').add(14, 'd').format('YYYY-MM-DD'),
+                    serialNo: `1${this.moment(val).format('YY')}${lastDate.Month}${code}`
+                }
             }
         },
         updateORALogtime(value) {
+            let cutOffValues = this.getCutOffValues(value.LogDateTime, value.EmployeeCode)
             let body = {
-                server: `HRIS${value.ShortName}`,
-                procedureName: 'PROCUPDATELOGTIME',
+                server: process.env.NODE_ENV ==='production' ? `HRIS${this.logtimeuserinfo.ShortName}` : `HRIS${this.logtimeuserinfo.ShortName.toLowerCase()}test`,
+                procedureName: 'HRIS.PROCUPDATELOGTIME',
                 values: [
                     value.EmployeeCode, 
                     this.moment(value.LogDateTime).format('YYYY-MM-DD'),
@@ -834,113 +854,16 @@ export default {
                     value.PayCode,
                     value.ManualRem, 
                     '121', 
+                    cutOffValues.serialNo,
+                    cutOffValues.cutOffDate,
+                    '4',
+                    this.logtimeuserinfo.EmployeeCode,
+                    this.moment().format('YYYY-MM-DD')
                 ]
             }
-            console.log(body)
-            // this.axios.post(`${this.asd_sql}/oraprocedure.php`, {data: JSON.stringify(body)})
+            // console.log(body)
+            this.axios.post(`${this.asd_sql}/oraprocedure.php`, {data: JSON.stringify(body)})
         },
-        // saveEmployeeLogtime(record) {
-        //     this.swal.fire({
-        //         title: 'Are you sure?',
-        //         text: "You won't be able to revert this!",
-        //         icon: 'warning',
-        //         showCancelButton: true,
-        //         confirmButtonColor: 'teal',
-        //         confirmButtonText: 'Yes, Save it!'
-        //     }).then((result) => {
-        //         if (result.isConfirmed) {
-        //             // this.setTimeOut(record)
-        //             console.log(record)
-        //             this.clearVariables()
-        //             this.dialog = false
-        //             this.swal.fire('Confirmed!', 'Record has been Updated.', 'success')
-        //         }
-        //     })
-        // },
-        // setTimeOut(value) {
-        //     let timeLogIn = null
-        //     let timeLogOut = null
-
-        //     timeLogIn = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.timeIn}`
-        //     if(this.timeOut) {
-        //         timeLogOut = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.timeOut}`
-        //     }
-
-        //     let body = {
-        //         procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-        //         values: [
-        //             `LT${this.moment().format('MMYYYY')}`, 
-        //             value.ShortName, 
-        //             value.IDCode,
-        //             value.EmployeeCode, 
-        //             this.moment(value.LogDateTime).format('YYYY-MM-DD'),
-        //             timeLogIn, 
-        //             timeLogOut,
-        //             value.NoHrs, 
-        //             value.Undertime, 
-        //             value.Tardiness, 
-        //             value.Overtime, 
-        //             value.ND, 
-        //             value.Shift, 
-        //             value.SW1, 
-        //             1, 
-        //             this.logtimeuserinfo.EmployeeCode,  //UserAcct, 
-        //             this.logtimeuserinfo.EmployeeCode,  //UserAcctO, 
-        //             this.moment.utc().format('YYYY-MM-DD HH:mm:ss'), //UserTime, 
-        //             this.moment.utc().format('YYYY-MM-DD HH:mm:ss'), //UserTimeO, 
-        //             '121', //ManualRem, 
-        //             '121', // Manual RemO
-        //             value.ND1, 
-        //             value.ND2, 
-        //             value.NoHrs1, 
-        //             value.OTCode == 'RD' ? 'R' : 'O', // OTCode
-        //             value.DayOff,
-        //             value.OTCode,
-        //             value.Meal,
-        //             value.MealOCC,
-        //             value.PostOT,
-        //             value.Leave,
-        //             value.TransIn,
-        //             value.TransOut,
-        //             value.DepartmentCode,
-        //             value.SectionCode,
-        //             value.TeamCode,
-        //             value.DesignationCode,
-        //             1
-        //         ]
-        //     }
-        //     console.log(body)
-        //     this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-        //     if(this.isHalfDay) {
-        //         body = {
-        //             procedureName: 'Logtime.dbo.ProcLogtimeManualEncode',
-        //             values: [
-        //                 value.LogDateTime, 
-        //                 value.EmployeeCode,
-        //                 this.isHalfDay,
-        //                 value.Remarks,
-        //                 this.logtimeuserinfo.EmployeeCode,
-        //                 1   
-        //             ]
-        //         }
-        //         this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-        //     }   
-        // },
-        // setHalfDay(val){
-        //     let timeInVal = this.moment.utc(`${val.StartTime}`, 'YYYY-MM-DD HH:mm:ss')
-            
-        //     if(this.isHalfDay) {
-        //         // Set Undertime Value
-        //         this.timeOut = timeInVal.add(4, 'hours')
-        //         this.timeOut = timeInVal.set({second: 0}).format('HH:mm')
-        //     } else {
-        //         this.timeOut = null
-        //         val.NoHrs = 0
-        //         val.Undertime = 0
-        //         val.Overtime = 0
-        //         val.Tardiness = 0
-        //     }
-        // }, 
     },
     watch: {
         dialog(val) {
@@ -948,8 +871,7 @@ export default {
                 this.clearVariables()
             }
         },
-        dtLogtime(val) {
-            this.getCutOffValues(val)
+        dtLogtime() {
             if(this.filterEmployeeLogtime.length == 0) {
                 this.loadEmployeesLogtime()
             }
@@ -960,36 +882,6 @@ export default {
         timeOut() {
             this.setLogtimeValues()
         }
-        // timeOut(val) {
-        //     let duration = {}
-        //     let dateToday = this.moment.utc(this.serverDateTime).format('YYYY-MM-DD')
-        //     let timeInVal = this.moment.utc(`${this.employeesLogtimeDetails.StartTime}`, 'YYYY-MM-DD HH:mm:ss')
-        //     let timeOutVal = this.moment.utc(`${dateToday} ${val}`, 'YYYY-MM-DD HH:mm:ss')
-        //     let hours =  timeInVal.format('HH')
-
-        //     //Calculate
-        //     duration = this.calculateDates(timeOutVal, timeInVal)
-        //     // console.log(Math.round(duration.hours));
-        //     this.isHalfDay = duration.hours == 4 ? true : false
-            
-        //     if(!this.isHalfDay) {
-        //         if (val && hours < timeOutVal.format('HH')) {
-        //             this.employeesLogtimeDetails.TimeOut = `${dateToday} ${val}`
-
-        //             this.employeesLogtimeDetails.NoHrs = (duration.hours - 1) >= 8 ? 8 : parseFloat((duration.hours - 1).toFixed(2))
-        //             this.employeesLogtimeDetails.Overtime = this.setOvertime(duration.hours)
-        //             this.employeesLogtimeDetails.Undertime = this.setUnderTime(duration.hours)
-        //         } else {
-        //             this.employeesLogtimeDetails.NoHrs = 0
-        //             this.employeesLogtimeDetails.Overtime = 0
-        //             this.employeesLogtimeDetails.TimeOut = null
-        //         }
-        //     } else {
-        //         this.employeesLogtimeDetails.NoHrs = duration.hours
-        //         this.employeesLogtimeDetails.Overtime = 0
-        //         this.employeesLogtimeDetails.Undertime = duration.hours 
-        //     }
-        // }
     },
     components: {   
         datePicker,
