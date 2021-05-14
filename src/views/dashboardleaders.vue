@@ -134,6 +134,7 @@
                                         append-icon="mdi-magnify"
                                         color="teal"
                                         hide-details
+                                        clearable
                                         outlined
                                         dense
                                     ></v-text-field>
@@ -411,7 +412,7 @@
         <v-dialog v-model="logtimeDialog" width="700" persistent>
             <v-card>
                 <v-toolbar color="teal" dark>
-                    <v-toolbar-title><v-icon large left>mdi-calendar</v-icon>Your Logtime</v-toolbar-title>
+                    <v-toolbar-title><v-icon large left>mdi-calendar</v-icon>My Logtime</v-toolbar-title>
                     <v-spacer></v-spacer>
                     <v-btn @click="logtimeDialog = !logtimeDialog" icon><v-icon>mdi-close</v-icon></v-btn>
                 </v-toolbar>
@@ -420,7 +421,6 @@
                         :headers="headersUser"
                         :items="filterEmployeeLogtimeUser"
                         :page.sync="pageUser"
-                        :search="searchTable"
                         :items-per-page="6"
                         @page-count="pageCountUser = $event"
                         hide-default-footer
