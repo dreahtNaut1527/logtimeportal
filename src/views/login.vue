@@ -178,7 +178,7 @@ export default {
                         value.PayCode,
                         value.DayOff,
                         value.OTCode,
-                        1, // Meal
+                        value.Meal,
                         value.MealOCC,
                         value.PostOT,
                         value.Leave,

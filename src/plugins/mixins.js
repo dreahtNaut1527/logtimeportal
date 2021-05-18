@@ -79,6 +79,17 @@ const plugins = {
                           }
                      })
                 },
+                zeroPad(num, numZeros) {
+                    let n = Math.abs(num);
+                    let zeros = Math.max(0, numZeros - Math.floor(n).toString().length );
+                    let zeroString = Math.pow(10,zeros).toString().substr(1);
+                    
+                    if( num < 0 ) {
+                        zeroString = '-' + zeroString;
+                    }
+                
+                    return zeroString+n;
+                }
             }
         })
     }

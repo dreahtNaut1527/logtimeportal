@@ -52,7 +52,7 @@
                                 <v-subheader>Percentage: 
                                     <v-spacer></v-spacer>
                                     <div class="font-weight-bold text-h4">
-                                        {{((filterTotalPresent.length / filterEmployeeLogtime.length) * 100).toFixed(2)}}%
+                                        {{filterTotalPresent.length == 0 ? 0 : ((filterTotalPresent.length / filterEmployeeLogtime.length) * 100).toFixed(2)}}%
                                     </div>
                                 </v-subheader>
                                 <v-container class="text-center pa-10 mt-n5">
@@ -148,32 +148,18 @@
                                     <v-tooltip bottom>
                                         <template v-slot:activator="{ on, attrs }">
                                             <v-btn 
-                                                @click="extractData(employeesLogtime)" 
+                                                @click="printDialog = !printDialog" 
                                                 color="teal" 
                                                 v-on="on"
                                                 v-bind="attrs"
                                                 x-large 
                                                 icon
                                             >
-                                                <v-icon>mdi-download</v-icon>
+                                                <v-icon>mdi-printer</v-icon>
                                             </v-btn>
                                         </template>
-                                        <span>Download CSV</span>
+                                        <span>Print Data</span>
                                     </v-tooltip> 
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{on, attrs}">
-                                            <v-btn
-                                                @click="exporttoexcel()"
-                                                color="teal"
-                                                v-on="on"
-                                                v-bind="attrs"
-                                                icon
-                                            >
-                                                <v-icon>mdi-file-excel</v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <span>Download Excel</span>
-                                    </v-tooltip>
                             </v-toolbar>
                             <v-divider></v-divider>
                             <v-data-table
@@ -449,6 +435,27 @@
                 </v-container>
             </v-card>
         </v-dialog>
+        <!-- Print Dialog -->
+        <v-dialog v-model="printDialog" width="500" persistent>
+            <v-card>
+                <v-toolbar color="teal" dark>
+                    <v-toolbar-title>Print</v-toolbar-title>
+                </v-toolbar>
+                <v-container>
+                    <v-row class="pt-3" dense>
+                        <v-col v-for="(item, i) in dateRange" :key="i" cols="12" md="6">
+                            <datePicker :menu="item.dialog" :dateValue.sync="item.value" :dateLabel="item.text" /> 
+                        </v-col>
+                    </v-row>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn @click="printDialog = !printDialog" text>Cancel</v-btn>
+                        <v-btn @click="extractData()" color="teal" dark>Print</v-btn>
+                    </v-card-actions>
+                </v-container>
+            </v-card>
+        </v-dialog>
+        <!-- End of Print Dialog -->
     </v-main>
 </template>
 
@@ -469,6 +476,7 @@ export default {
             timeInDialog: false,
             timeOutDialog: false,
             dialog: false,
+            printDialog: false,
             loading: true,
             pageCount: 0,
             pageCountUser: 0,
@@ -479,7 +487,12 @@ export default {
             searchTable: '',
             dtLogtime: '',
             employeesLogtime: [],
+            tempLogtimeRecords: [],
             employeesLogtimeDetails: {},
+            dateRange: [
+                {text: 'Date From', value: this.moment.utc(this.serverDateTime).format('YYYY-MM-DD'), dialog: false},
+                {text: 'Date To', value: this.moment.utc(this.serverDateTime).format('YYYY-MM-DD'), dialog: false}
+            ],
             employeesLogtimeDetailsManual: {
                 ShortName: null,
                 LogDateTime: null,
@@ -595,51 +608,107 @@ export default {
                 )
             })
         },
+        filterPrintLogtimeRange() {
+            return this.tempLogtimeRecords.filter(rec => {
+                return (
+                    this.moment.utc(rec.LogDateTime).format('YYYY-MM-DD') >= this.dateRange[0].value &&
+                    this.moment.utc(rec.LogDateTime).format('YYYY-MM-DD') <= this.dateRange[1].value
+                )
+            }).sort((a, b) => a.EmployeeCode - b.EmployeeCode)
+        }
     },
     methods: {
         browserTabEvents(events) {
             events.preventDefault()
             events.returnValue = ""
         },
-        exporttoexcel() {
-            this.swal.fire('Information', 'Function is not yet available', 'info')
+        extractData() {
+            let data = []
+            let counter = 0
+            let tempDateRange = this.dateRange
+            
+            // Query data
+            if(tempDateRange[0].value <= tempDateRange[1].value) {
+                let body = {
+                    procedureName: 'Logtime.dbo.ProcGetLogTimeData',
+                    values: this.getParameters(this.getUnionLogtime(tempDateRange), this.logtimeuserinfo.UserLevel)
+                }
+                // console.log(body);
+                this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
+                    // console.log(res.data);
+                    this.tempLogtimeRecords = res.data
+                    this.filterPrintLogtimeRange.forEach((rec, index) => {
+                        if(rec.OTCode == 'RD' && rec.TimeIn) {
+                            if(index == 0) {
+                                data.push({
+                                    EmployeeCode: rec.EmployeeCode,
+                                    Name: rec.EmployeeName,
+                                    Division: rec.DepartmentName,
+                                    From: tempDateRange[0].value,
+                                    To: tempDateRange[1].value,
+                                    Days: 1,
+                                    Amount: 35
+                                })
+                                counter += 1
+                            } else {
+                                if(rec.EmployeeCode == data[counter - 1].EmployeeCode) {
+                                    data[counter - 1].Days += 1
+                                    data[counter - 1].Amount += 35
+                                } else {
+                                    data.push({
+                                        EmployeeCode: rec.EmployeeCode,
+                                        Name: rec.EmployeeName,
+                                        Division: rec.DepartmentName,
+                                        From: tempDateRange[0].value,
+                                        To: tempDateRange[1].value,
+                                        Days: 1,
+                                        Amount: 35
+                                    })
+                                    counter += 1
+                                }
+                            }   
+                        }
+                    })
+                    this.reimbursementReport(data)
+                })  
+            }
         },
-        extractData(val) {
-            let body = []
-            val.forEach(rec => [
-                body.push({
-                    Code: rec.EmployeeCode.toString(),
-                    LogDate: rec.LogDateTime,
-                    Name: rec.EmployeeName,
-                    TimeIn: rec.TimeIn == null ? '' : this.moment.utc(rec.TimeIn).format('HH:mm:ss'),
-                    TimeOut: rec.TimeOut == null ? '' : this.moment.utc(rec.TimeOut).format('HH:mm:ss'),
-                    Hours: rec.NoHrs,
-                    LogType: rec.LogType == 1 ? 'Work From Home' : 'Office'
-                })
-            ])  
-            this.axios.post(`${this.api}/exportcsv`, {data: JSON.stringify(body)}).then(res => {
-                this.jsfiledownload(res.data, `${this.logtimeuserinfo.DepartmentName} Department.csv`)
-            })
+        getUnionLogtime(dateRange) {
+            let strUnion = ''
+            let intDay = 0
+            let intYear = this.moment(dateRange[0]).format('YYYY')
+            let dtFrom = parseInt(this.moment(dateRange[0].value).format("MM"))
+            let dtTo = parseInt(this.moment(dateRange[1].value).format("MM"))
+            if(dtFrom != dtTo) {
+                while(dtFrom <= dtTo) {
+                    intDay = dtFrom > 9 ? dtFrom : `0${dtFrom}`
+                    strUnion += `SELECT * FROM Logtime.dbo.LT${intDay}${intYear} UNION ALL `
+                    dtFrom++ 
+                }
+                return `(${strUnion.substring(0, strUnion.lastIndexOf('UNION ALL'))})`
+                
+            } else {
+                return `LT${dtFrom > 9 ? dtFrom : `0${dtFrom}`}${intYear}`
+            }
         },
         loadEmployeesLogtime() {
             this.loading = true
             let body = {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeData',
-                values: []
+                values: this.getParameters(`LT${this.moment(this.dtLogtime).format('MMYYYY')}`, this.logtimeuserinfo.UserLevel)
             }
-            switch (this.logtimeuserinfo.UserLevel) {
-                case 1:
-                    body.values.push(
-                        `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
-                        this.logtimeuserinfo.ShortName,
-                        this.logtimeuserinfo.DepartmentName,
-                        null,
-                        null
-                    )
-                    break;
+            // console.log(body);
+            this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
+                this.employeesLogtime = res.data
+                this.loading = false
+            })  
+        },
+        getParameters(strQuery, level) {
+            let body = []
+            switch (level) {
                 case 2:
-                    body.values.push(
-                        `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
+                    body.push(
+                        strQuery,
                         this.logtimeuserinfo.ShortName,
                         this.logtimeuserinfo.DepartmentName,
                         this.logtimeuserinfo.SectionName,
@@ -647,8 +716,8 @@ export default {
                     )
                     break;
                 case 3:
-                    body.values.push(
-                        `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
+                    body.push(
+                        strQuery,
                         this.logtimeuserinfo.ShortName,
                         this.logtimeuserinfo.DepartmentName,
                         this.logtimeuserinfo.SectionName,
@@ -656,8 +725,8 @@ export default {
                     )
                     break;            
                 default:
-                    body.values.push(
-                        `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
+                    body.push(
+                        strQuery,
                         this.logtimeuserinfo.ShortName,
                         this.logtimeuserinfo.DepartmentName,
                         null,
@@ -665,11 +734,7 @@ export default {
                     )
                     break;
             }
-            // console.log(body);
-            this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
-                this.employeesLogtime = res.data
-                this.loading = false
-            })  
+            return body
         },
         viewEmployeeLogtimeDetails(val) {
             this.dialog = true
@@ -782,7 +847,6 @@ export default {
                         rec.Undertime,
                         rec.Tardiness,
                         rec.Overtime,
-                        rec.Meal,
                         this.isHalfDay,
                         rec.Remarks,
                         rec.UpdatedUserId,

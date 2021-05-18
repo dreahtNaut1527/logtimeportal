@@ -6,7 +6,7 @@ import moment from 'moment'
 import socketio from 'socket.io-client'
 import VueSocketIO from 'vue-socket.io'
 import VueMask from 'v-mask'
-import jsfiledownload from 'js-file-download'
+import reimbursementReport from './reports/reimbursementReport'
 import App from './App.vue'
 import './registerServiceWorker'
 import router from './router'
@@ -28,7 +28,7 @@ Vue.prototype.axios = axios
 Vue.prototype.md5 = md5
 Vue.prototype.swal = swal
 Vue.prototype.moment = moment
-Vue.prototype.jsfiledownload = jsfiledownload
+Vue.prototype.reimbursementReport = reimbursementReport
 
 
 // Vue Use

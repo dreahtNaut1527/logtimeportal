@@ -212,7 +212,8 @@ export default {
                     this.logtimeuserinfo.ShortName,
                     this.logtimeuserinfo.DepartmentName,
                     null,
-                    null
+                    null,
+                    0
                 ]
             }
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
