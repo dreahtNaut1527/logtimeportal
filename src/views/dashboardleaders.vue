@@ -612,9 +612,10 @@ export default {
             return this.tempLogtimeRecords.filter(rec => {
                 return (
                     this.moment.utc(rec.LogDateTime).format('YYYY-MM-DD') >= this.dateRange[0].value &&
-                    this.moment.utc(rec.LogDateTime).format('YYYY-MM-DD') <= this.dateRange[1].value
+                    this.moment.utc(rec.LogDateTime).format('YYYY-MM-DD') <= this.dateRange[1].value &&
+                    rec.LogType == 1
                 )
-            }).sort((a, b) => a.EmployeeCode - b.EmployeeCode)
+            })
         }
     },
     methods: {
@@ -625,50 +626,53 @@ export default {
         extractData() {
             let data = []
             let counter = 0
+            let dtCurDate = null
             let tempDateRange = this.dateRange
             
             // Query data
             if(tempDateRange[0].value <= tempDateRange[1].value) {
                 let body = {
                     procedureName: 'Logtime.dbo.ProcGetLogTimeData',
-                    values: this.getParameters(this.getUnionLogtime(tempDateRange), this.logtimeuserinfo.UserLevel)
+                    values: this.getParameters(this.getUnionLogtime(tempDateRange), this.logtimeuserinfo.UserLevel, 1)
                 }
-                // console.log(body);
+                // console.log(body)
                 this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
-                    // console.log(res.data);
                     this.tempLogtimeRecords = res.data
                     this.filterPrintLogtimeRange.forEach((rec, index) => {
-                        if(rec.OTCode == 'RD' && rec.TimeIn) {
                             if(index == 0) {
                                 data.push({
                                     EmployeeCode: rec.EmployeeCode,
                                     Name: rec.EmployeeName,
                                     Division: rec.DepartmentName,
-                                    From: tempDateRange[0].value,
-                                    To: tempDateRange[1].value,
+                                    From: this.moment(rec.LogDateTime).format('YYYY-MM-DD'),
+                                    To: null,
                                     Days: 1,
                                     Amount: 35
                                 })
+                                dtCurDate = this.moment(rec.LogDateTime).format('YYYY-MM-DD')
                                 counter += 1
                             } else {
-                                if(rec.EmployeeCode == data[counter - 1].EmployeeCode) {
+                                if(rec.EmployeeCode == data[counter - 1].EmployeeCode && this.moment(dtCurDate).format('YYYY-MM-DD') == this.moment(rec.LogDateTime).format('YYYY-MM-DD')) {
                                     data[counter - 1].Days += 1
                                     data[counter - 1].Amount += 35
+                                    data[counter - 1].To = dtCurDate
                                 } else {
                                     data.push({
                                         EmployeeCode: rec.EmployeeCode,
                                         Name: rec.EmployeeName,
                                         Division: rec.DepartmentName,
-                                        From: tempDateRange[0].value,
-                                        To: tempDateRange[1].value,
+                                        From: this.moment(rec.LogDateTime).format('YYYY-MM-DD'),
+                                        To: this.moment(rec.LogDateTime).format('YYYY-MM-DD') == this.moment(dtCurDate).format('YYYY-MM-DD') ? this.moment(rec.LogDateTime).format('YYYY-MM-DD') : dtCurDate, 
                                         Days: 1,
                                         Amount: 35
                                     })
+                                    dtCurDate = this.moment(rec.LogDateTime).format('YYYY-MM-DD')
                                     counter += 1
                                 }
                             }   
-                        }
+                            dtCurDate = this.moment.utc(rec.LogDateTime).add('1', 'days').format('YYYY-MM-DD')
                     })
+                    // console.log(data)
                     this.reimbursementReport(data)
                 })  
             }
@@ -695,7 +699,7 @@ export default {
             this.loading = true
             let body = {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeData',
-                values: this.getParameters(`LT${this.moment(this.dtLogtime).format('MMYYYY')}`, this.logtimeuserinfo.UserLevel)
+                values: this.getParameters(`LT${this.moment(this.dtLogtime).format('MMYYYY')}`, this.logtimeuserinfo.UserLevel, 0)
             }
             // console.log(body);
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
@@ -703,7 +707,7 @@ export default {
                 this.loading = false
             })  
         },
-        getParameters(strQuery, level) {
+        getParameters(strQuery, level, order) {
             let body = []
             switch (level) {
                 case 2:
@@ -712,7 +716,8 @@ export default {
                         this.logtimeuserinfo.ShortName,
                         this.logtimeuserinfo.DepartmentName,
                         this.logtimeuserinfo.SectionName,
-                        null
+                        null,
+                        order
                     )
                     break;
                 case 3:
@@ -721,7 +726,8 @@ export default {
                         this.logtimeuserinfo.ShortName,
                         this.logtimeuserinfo.DepartmentName,
                         this.logtimeuserinfo.SectionName,
-                        this.logtimeuserinfo.TeamName
+                        this.logtimeuserinfo.TeamName,
+                        order
                     )
                     break;            
                 default:
@@ -730,7 +736,8 @@ export default {
                         this.logtimeuserinfo.ShortName,
                         this.logtimeuserinfo.DepartmentName,
                         null,
-                        null
+                        null,
+                        order
                     )
                     break;
             }
