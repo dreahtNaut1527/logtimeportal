@@ -657,6 +657,7 @@ export default {
                                     data[counter - 1].Amount += 35
                                     data[counter - 1].To = dtCurDate
                                 } else {
+                                    //data[counter - 1].To = this.moment.utc(dtCurDate).subtract('1', 'days').format('YYYY-MM-DD')
                                     data.push({
                                         EmployeeCode: rec.EmployeeCode,
                                         Name: rec.EmployeeName,
@@ -672,7 +673,7 @@ export default {
                             }   
                             dtCurDate = this.moment.utc(rec.LogDateTime).add('1', 'days').format('YYYY-MM-DD')
                     })
-                    // console.log(data)
+                    console.log(data)
                     this.reimbursementReport(data)
                 })  
             }
