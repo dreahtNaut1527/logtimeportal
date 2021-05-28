@@ -27,9 +27,7 @@
     "vuetify": "^2.4.0",
     "vuex": "^3.4.0",
     "vuex-persistedstate": "^4.0.0-beta.3",
-    "winser": "^1.0.3",
-    "xlsx": "^0.17.0",
-    "xlsx-style": "^0.8.13"
+    "winser": "^1.0.3"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",

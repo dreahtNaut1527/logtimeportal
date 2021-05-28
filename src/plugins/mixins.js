@@ -88,7 +88,57 @@ const plugins = {
                         zeroString = '-' + zeroString;
                     }
                 
-                    return zeroString+n;
+                    return zeroString + n;
+                },
+                getLeaveDesc(leave, otcode) {
+                    let leaveDesc = null
+                    let leaveList = [
+                        {code: '1', text: 'Vacation'},
+                        {code: '2', text: 'Sick'},
+                        {code: '3', text: 'Emergency'},
+                        {code: '4', text: 'Paternity'},
+                        {code: '5', text: 'Bereavement'},
+                        {code: '6', text: 'Maternity'},
+                        {code: '7', text: 'Suspension'},
+                        {code: 'S', text: 'Solo Parent'},
+                        {code: 'P', text: '10 yrs P.A. Incentive'},
+                        {code: 'L', text: 'NW Sick'},
+                        {code: 'V', text: 'NW Vacation'},
+                        {code: 'W', text: 'NW Without Pay'},
+                        {code: 'I', text: 'Indefinite'},
+                        {code: 'E', text: 'Allocation of Mat. Leave'},
+                        {code: 'A', text: 'Maternity Solo Parent'}
+                    ]
+
+                    let otCodeList = [
+                        {code: 'RD', text: 'Regular Day'},
+                        {code: 'NW', text: 'Non-Working Holiday'},
+                        {code: 'SR', text: 'Sunday/RestDay'},
+                        {code: 'HL', text: 'Legal Holiday'},
+                        {code: 'SL', text: 'Sunday Legal Holiday'},
+                        {code: 'SS', text: 'Sunday Special Holiday'},
+                        {code: 'HS', text: 'Special Holiday'},
+                        {code: 'DH', text: 'Company Declared Holiday'}
+                    ]
+                    
+                    // Return Leave
+                    leaveList.forEach(rec => {
+                        if(rec.code == leave) {
+                            leaveDesc = rec.text
+                        }
+                    })
+
+
+                    // Return OTCode
+                    if(!leaveDesc) {
+                        otCodeList.forEach(rec => {
+                            if (rec.code == otcode) {
+                                leaveDesc = (otcode == 'RD' ? 'Absent' : rec.text)
+                            }
+                        })
+                    }
+
+                    return leaveDesc
                 }
             }
         })

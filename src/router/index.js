@@ -19,6 +19,11 @@ const routes = [
     path: '/dashboardleaders',
     name: 'dashboardleaders',
     component: () => import(/* webpackChunkName: "about" */ '../views/dashboardleaders')
+  },
+  {
+    path: '/logtimedetails',
+    name: 'logtimedetails',
+    component: () => import(/* webpackChunkName: "about" */ '../views/logtimedetails')
   }
 ]
 

@@ -4,207 +4,210 @@
         <v-container>
             <v-row justify="center">
                 <v-col cols="12" md="9">
-                    <v-row align="center" justify="space-between">
-                        <v-col cols="12" md="4">
-                            <v-card flat>
-                                <v-subheader>Total Present: 
-                                    <v-spacer></v-spacer>
-                                    <div class="font-weight-bold text-h4">
-                                        {{filterTotalPresent.length == 0 ? 0 : filterTotalPresent.length}}
-                                    </div>
-                                </v-subheader>
-                                <v-container class="text-center pa-10 mt-n5">
-                                    <v-progress-circular
-                                        :rotate="90"
-                                        :size="150"
-                                        :width="10"
-                                        :value="(filterTotalPresent.length / filterEmployeeLogtime.length) * 100"
-                                        color="#CCB96C"
-                                    >
-                                        <v-icon color="#CCB96C" x-large>mdi-account</v-icon>
-                                    </v-progress-circular>
-                                </v-container>
-                            </v-card>
-                        </v-col>
-                        <v-col cols="12" md="4">
-                            <v-card flat>
-                                <v-subheader>Total Absent: 
-                                    <v-spacer></v-spacer>
-                                    <div class="font-weight-bold text-h4">
-                                         {{filterTotalAbsent.length}}
-                                    </div>
-                                </v-subheader>
-                                <v-container class="text-center pa-10 mt-n5">
-                                    <v-progress-circular
-                                         :rotate="90"
-                                        :size="150"
-                                        :width="10"
-                                        :value="(filterTotalAbsent.length / filterEmployeeLogtime.length) * 100"
-                                        color="teal"
-                                    >
-                                        <v-icon color="teal" x-large>mdi-exclamation-thick</v-icon>
-                                    </v-progress-circular>
-                                </v-container>
-                            </v-card>
-                        </v-col>
-                        <v-col cols="12" md="4">
-                             <v-card flat>
-                                <v-subheader>Percentage: 
-                                    <v-spacer></v-spacer>
-                                    <div class="font-weight-bold text-h4">
-                                        {{filterTotalPresent.length == 0 ? 0 : ((filterTotalPresent.length / filterEmployeeLogtime.length) * 100).toFixed(2)}}%
-                                    </div>
-                                </v-subheader>
-                                <v-container class="text-center pa-10 mt-n5">
-                                    <v-progress-circular
-                                        :rotate="90"
-                                        :size="150"
-                                        :width="10"
-                                        :value="(filterTotalPresent.length / filterEmployeeLogtime.length) * 100"
-                                        color="#CC95C7"
-                                    >
-                                        <v-icon color="#CC95C7" x-large>mdi-percent</v-icon>
-                                    </v-progress-circular>
-                                </v-container>
-                            </v-card>
-                        </v-col>
-                    </v-row>
+                    <v-lazy transition="scroll-y-transition" :options="{ threshold: 0.8 }">
+                        <v-row align="center" justify="space-between">
+                                <v-col cols="12" md="4">
+                                    <v-card flat>
+                                        <v-subheader>Total Present: 
+                                            <v-spacer></v-spacer>
+                                            <div class="font-weight-bold text-h4">
+                                                {{filterTotalPresent.length == 0 ? 0 : filterTotalPresent.length}}
+                                            </div>
+                                        </v-subheader>
+                                        <v-container class="text-center pa-10 mt-n5">
+                                            <v-progress-circular
+                                                :rotate="90"
+                                                :size="150"
+                                                :width="10"
+                                                :value="(filterTotalPresent.length / filterEmployeeLogtime.length) * 100"
+                                                color="#CCB96C"
+                                            >
+                                                <v-icon color="#CCB96C" x-large>mdi-account</v-icon>
+                                            </v-progress-circular>
+                                        </v-container>
+                                    </v-card>
+                                </v-col>
+                                <v-col cols="12" md="4">
+                                    <v-card flat>
+                                        <v-subheader>Total Absent: 
+                                            <v-spacer></v-spacer>
+                                            <div class="font-weight-bold text-h4">
+                                                {{filterTotalAbsent.length}}
+                                            </div>
+                                        </v-subheader>
+                                        <v-container class="text-center pa-10 mt-n5">
+                                            <v-progress-circular
+                                                :rotate="90"
+                                                :size="150"
+                                                :width="10"
+                                                :value="(filterTotalAbsent.length / filterEmployeeLogtime.length) * 100"
+                                                color="teal"
+                                            >
+                                                <v-icon color="teal" x-large>mdi-exclamation-thick</v-icon>
+                                            </v-progress-circular>
+                                        </v-container>
+                                    </v-card>
+                                </v-col>
+                                <v-col cols="12" md="4">
+                                    <v-card flat>
+                                        <v-subheader>Percentage: 
+                                            <v-spacer></v-spacer>
+                                            <div class="font-weight-bold text-h4">
+                                                {{filterTotalPresent.length == 0 ? 0 : ((filterTotalPresent.length / filterEmployeeLogtime.length) * 100).toFixed(2)}}%
+                                            </div>
+                                        </v-subheader>
+                                        <v-container class="text-center pa-10 mt-n5">
+                                            <v-progress-circular
+                                                :rotate="90"
+                                                :size="150"
+                                                :width="10"
+                                                :value="(filterTotalPresent.length / filterEmployeeLogtime.length) * 100"
+                                                color="#CC95C7"
+                                            >
+                                                <v-icon color="#CC95C7" x-large>mdi-percent</v-icon>
+                                            </v-progress-circular>
+                                        </v-container>
+                                    </v-card>
+                                </v-col>
+                        </v-row>
+                    </v-lazy>
                 </v-col>
                 <v-col cols="12" md="3">
-                    <v-card outlined>
-                        <v-toolbar color="teal" flat dark>
-                            <v-toolbar-title>Today</v-toolbar-title>
-                            <v-spacer></v-spacer>
-                            <v-tooltip bottom>
-                                <template v-slot:activator="{ on, attrs }">
-                                    <v-btn
-                                        @click="logtimeDialog = !logtimeDialog"
-                                        v-bind="attrs"
-                                        v-on="on"
-                                        dark
-                                        icon
-                                    >
-                                        <v-icon>
-                                            mdi-eye
-                                        </v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>View Logtime</span>
-                            </v-tooltip>
-                        </v-toolbar>
-                        <v-container>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-subtitle>TimeIn:</v-list-item-subtitle>
-                                </v-list-item-content>
+                    <v-lazy transition="scroll-y-transition" :options="{ threshold: 0.8 }">
+                        <v-card outlined>
+                            <v-toolbar color="teal" flat dark>
+                                <v-toolbar-title>Today</v-toolbar-title>
                                 <v-spacer></v-spacer>
-                                <v-subheader class="font-weight-bold">{{moment.utc(logtimeuserinfo.TimeIn).format('HH:mm:ss')}}</v-subheader>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-subtitle>TimeOut:</v-list-item-subtitle>
-                                </v-list-item-content>
-                                <v-spacer></v-spacer>
-                                <v-subheader class="font-weight-bold" v-if="logtimeuserinfo.TimeOut != null">{{moment.utc(logtimeuserinfo.TimeOut).format('HH:mm:ss')}}</v-subheader>
-                                <v-subheader class="font-weight-bold" v-else>N/A</v-subheader>
-                            </v-list-item>
-                            <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-subtitle>Logtype:</v-list-item-subtitle>
-                                </v-list-item-content>
-                                <v-spacer></v-spacer>
-                                <v-chip color="teal" dark>
-                                    {{logtimeuserinfo.LogType == 1 ? "Home" : "Office"}}
-                                    <v-icon v-if="logtimeuserinfo.LogType == 1" right>mdi-home-map-marker</v-icon>
-                                    <v-icon v-else right>mdi-office-building-marker</v-icon>
-                                </v-chip>
-                            </v-list-item>
-                        </v-container>
-                    </v-card>
+                                <v-tooltip bottom>
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-btn
+                                            @click="viewLogtimeRecords()"
+                                            v-bind="attrs"
+                                            v-on="on"
+                                            dark
+                                            icon
+                                        >
+                                            <v-icon>
+                                                mdi-eye
+                                            </v-icon>
+                                        </v-btn>
+                                    </template>
+                                    <span>View Logtime</span>
+                                </v-tooltip>
+                            </v-toolbar>
+                            <v-container>
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-subtitle>TimeIn:</v-list-item-subtitle>
+                                    </v-list-item-content>
+                                    <v-spacer></v-spacer>
+                                    <v-subheader class="font-weight-bold">{{moment.utc(logtimeuserinfo.TimeIn).format('HH:mm:ss')}}</v-subheader>
+                                </v-list-item>
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-subtitle>TimeOut:</v-list-item-subtitle>
+                                    </v-list-item-content>
+                                    <v-spacer></v-spacer>
+                                    <v-subheader class="font-weight-bold" v-if="logtimeuserinfo.TimeOut != null">{{moment.utc(logtimeuserinfo.TimeOut).format('HH:mm:ss')}}</v-subheader>
+                                    <v-subheader class="font-weight-bold" v-else>N/A</v-subheader>
+                                </v-list-item>
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-subtitle>Logtype:</v-list-item-subtitle>
+                                    </v-list-item-content>
+                                    <v-spacer></v-spacer>
+                                    <v-chip color="teal" dark>
+                                        {{logtimeuserinfo.LogType == 1 ? "Home" : "Office"}}
+                                        <v-icon v-if="logtimeuserinfo.LogType == 1" right>mdi-home-map-marker</v-icon>
+                                        <v-icon v-else right>mdi-office-building-marker</v-icon>
+                                    </v-chip>
+                                </v-list-item>
+                            </v-container>
+                        </v-card>
+                    </v-lazy>
                 </v-col>    
                 <v-col cols="12" md="12">
-                    <v-card>
-                        <v-container>
-                            <v-toolbar flat>
-                                <v-toolbar-title class="font-weight-bold hidden-md-and-down">Logtime</v-toolbar-title>
-                                <v-spacer></v-spacer>
-                                    <v-text-field
-                                        v-model="searchTable"
-                                        placeholder="Search" 
-                                        append-icon="mdi-magnify"
-                                        color="teal"
-                                        hide-details
-                                        clearable
-                                        outlined
-                                        dense
-                                    ></v-text-field>
-                                    <datePicker :menu="dateDialog" :dateValue.sync="dtLogtime" dateLabel="Logdate" /> 
-                                    <v-checkbox
-                                        v-model="workFromHome"
-                                        label="Work From Home"
-                                        color="teal"
-                                        hide-details
-                                    ></v-checkbox>
-                                    <v-tooltip bottom>
-                                        <template v-slot:activator="{ on, attrs }">
-                                            <v-btn 
-                                                @click="printDialog = !printDialog" 
-                                                color="teal" 
-                                                v-on="on"
-                                                v-bind="attrs"
-                                                x-large 
-                                                icon
-                                            >
-                                                <v-icon>mdi-printer</v-icon>
-                                            </v-btn>
-                                        </template>
-                                        <span>Print Data</span>
-                                    </v-tooltip> 
-                            </v-toolbar>
-                            <v-divider></v-divider>
-                            <v-data-table
-                                :headers="headers"
-                                :items="filterEmployeeLogtime"
-                                :loading="loading"
-                                :page.sync="page"
-                                :search="searchTable"
-                                :items-per-page="5"
-                                loading-text="Loading Data. . .Please Wait"
-                                @page-count="pageCount = $event"
-                                hide-default-footer
-                            >
-                                <template v-slot:item="props">
-                                    <tr :style="!props.item.TimeIn ? 'color: #b71c1c;' : ''">
-                                        <td>{{props.item.EmployeeCode}}</td>
-                                        <td>{{props.item.EmployeeName}}</td>
-                                        <td>{{!props.item.TimeIn ? '' : moment.utc(props.item.TimeIn).format('HH:mm:ss')}}</td>
-                                        <td>{{!props.item.TimeOut ? '' : moment.utc(props.item.TimeOut).format('HH:mm:ss')}}</td>
-                                        <td class="text-center">{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
-                                        <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Overtime}}</td>
-                                        <td>
-                                            <v-chip v-if="props.item.TimeIn" :color="props.item.LogType == 1 ? 'orange' : 'green'" dark>
-                                                {{props.item.LogTypeDesc}}
-                                            </v-chip>
-                                        </td>
-                                        <td v-if="props.item.LogType == 1">
-                                            <v-btn @click="viewEmployeeLogtimeDetails(props.item)" icon fab small>
-                                                <v-icon>mdi-pencil</v-icon>
-                                            </v-btn>
-                                        </td>
-                                        <td v-else>
-                                            <v-btn @click="viewEmployeeLogtimeDetails(props.item)" icon fab small><v-icon>mdi-eye</v-icon></v-btn>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </v-data-table> 
-                            <v-pagination
-                                v-model="page"
-                                color="teal"
-                                :length="pageCount"
-                                :total-visible="10"
-                            ></v-pagination>
-                        </v-container>
-                    </v-card>
+                    <v-lazy transition="scroll-y-reverse-transition" :options="{ threshold: 0.8 }">
+                        <v-card>
+                            <v-container>
+                                <v-toolbar flat>
+                                    <v-toolbar-title class="font-weight-bold hidden-md-and-down">Logtime</v-toolbar-title>
+                                    <v-spacer></v-spacer>
+                                        <v-text-field
+                                            v-model="searchTable"
+                                            placeholder="Search" 
+                                            append-icon="mdi-magnify"
+                                            color="teal"
+                                            hide-details
+                                            clearable
+                                            outlined
+                                            dense
+                                        ></v-text-field>
+                                        <datePicker :menu="dateDialog" :dateValue.sync="dtLogtime" dateLabel="Logdate" /> 
+                                        <v-checkbox
+                                            v-model="workFromHome"
+                                            label="Work From Home"
+                                            color="teal"
+                                            hide-details
+                                        ></v-checkbox>
+                                        <v-tooltip bottom>
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-btn 
+                                                    @click="printDialog = !printDialog" 
+                                                    color="teal" 
+                                                    v-on="on"
+                                                    v-bind="attrs"
+                                                    x-large 
+                                                    icon
+                                                >
+                                                    <v-icon>mdi-printer</v-icon>
+                                                </v-btn>
+                                            </template>
+                                            <span>Print Data</span>
+                                        </v-tooltip> 
+                                </v-toolbar>
+                                <v-divider></v-divider>
+                                <v-data-table
+                                    :headers="headers"
+                                    :items="filterEmployeeLogtime"
+                                    :loading="loading"
+                                    :page.sync="page"
+                                    :search="searchTable"
+                                    :items-per-page="5"
+                                    loading-text="Loading Data. . .Please Wait"
+                                    @page-count="pageCount = $event"
+                                    hide-default-footer
+                                >
+                                    <template v-slot:item="props">
+                                        <tr :style="!props.item.TimeIn ? 'color: #b71c1c;' : ''">
+                                            <td>{{props.item.EmployeeCode}}</td>
+                                            <td>{{props.item.EmployeeName}}</td>
+                                            <td>{{!props.item.TimeIn ? '' : moment.utc(props.item.TimeIn).format('HH:mm:ss')}}</td>
+                                            <td>{{!props.item.TimeOut ? '' : moment.utc(props.item.TimeOut).format('HH:mm:ss')}}</td>
+                                            <td class="text-center">{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
+                                            <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Overtime}}</td>
+                                            <td>
+                                                <v-chip v-if="props.item.TimeIn" :color="props.item.LogType == 1 ? 'orange' : 'green'" dark>
+                                                    {{props.item.LogTypeDesc}}
+                                                </v-chip>
+                                            </td>
+                                            <td>
+                                                <v-btn @click="viewEmployeeLogtimeDetails(props.item)" icon fab small>
+                                                    <v-icon>{{ props.item.LogType == 1 ? 'mdi-pencil' : 'mdi-eye'}}</v-icon>
+                                                </v-btn>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </v-data-table> 
+                                <v-pagination
+                                    v-model="page"
+                                    color="teal"
+                                    :length="pageCount"
+                                    :total-visible="10"
+                                ></v-pagination>
+                            </v-container>
+                        </v-card>
+                    </v-lazy>
                 </v-col>
             </v-row>
         </v-container>
@@ -263,7 +266,7 @@
                                             <v-list-item>
                                                 <v-list-item-content>
                                                     <v-list-item-subtitle>TimeIn:</v-list-item-subtitle>
-                                                    <v-list-item-title class="font-weight-bold">
+                                                    <v-list-item-title class="font-weight-bold caption">
                                                         {{employeesLogtimeDetails.TimeIn != null ? moment.utc(employeesLogtimeDetails.TimeIn).format('HH:mm:ss') : "N/A"}}
                                                     </v-list-item-title>
                                                 </v-list-item-content>
@@ -273,18 +276,28 @@
                                             <v-list-item>
                                                 <v-list-item-content>
                                                     <v-list-item-subtitle>TimeOut:</v-list-item-subtitle>
-                                                    <v-list-item-title class="font-weight-bold">
+                                                    <v-list-item-title class="font-weight-bold caption">
                                                         {{employeesLogtimeDetails.TimeOut != null ? moment.utc(employeesLogtimeDetails.TimeOut).format('HH:mm:ss') : "N/A"}}
                                                     </v-list-item-title>
                                                 </v-list-item-content>
                                             </v-list-item>
                                         </v-col>
-                                        <v-col cols="12" md="6">
+                                        <v-col cols="12" md="4">
                                             <v-list-item>
                                                 <v-list-item-content>
                                                     <v-list-item-subtitle>Shift:</v-list-item-subtitle>
-                                                    <v-list-item-title class="font-weight-bold">
+                                                    <v-list-item-title class="font-weight-bold caption">
                                                         {{employeesLogtimeDetails.ShiftTime}}
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </v-col>
+                                        <v-col cols="12" md="2">
+                                            <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-subtitle>Status:</v-list-item-subtitle>
+                                                    <v-list-item-title class="font-weight-bold caption">
+                                                        {{getLeaveDesc(employeesLogtimeDetails.Leave, employeesLogtimeDetails.OTCode)}}
                                                     </v-list-item-title>
                                                 </v-list-item-content>
                                             </v-list-item>
@@ -395,7 +408,7 @@
                 </v-container>
             </v-card>
         </v-dialog>
-        <v-dialog v-model="logtimeDialog" width="700" persistent>
+        <!-- <v-dialog v-model="logtimeDialog" width="700" persistent>
             <v-card>
                 <v-toolbar color="teal" dark>
                     <v-toolbar-title><v-icon large left>mdi-calendar</v-icon>My Logtime</v-toolbar-title>
@@ -434,7 +447,7 @@
                     ></v-pagination>
                 </v-container>
             </v-card>
-        </v-dialog>
+        </v-dialog> -->
         <!-- Print Dialog -->
         <v-dialog v-model="printDialog" width="500" persistent>
             <v-card>
@@ -536,7 +549,11 @@ export default {
         window.addEventListener("beforeunload", this.browserTabEvents)
         this.dateToday = this.serverDateTime
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
-        this.loadEmployeesLogtime()
+        if(this.moment.utc(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment.utc(this.dateToday).format('YYYY-MM-DD')) {
+            this.userLoggedOut(this.logtimeuserinfo)
+        } else {
+            this.loadEmployeesLogtime()
+        }
     },
     beforeDestroy() {
         window.removeEventListener("beforeunload", this.browserTabEvents)
@@ -619,6 +636,9 @@ export default {
         }
     },
     methods: {
+        viewLogtimeRecords() {
+            this.$router.push({name: 'logtimedetails', query: {code: this.logtimeuserinfo.EmployeeCode}})
+        },
         browserTabEvents(events) {
             events.preventDefault()
             events.returnValue = ""
@@ -773,7 +793,7 @@ export default {
             this.timeIn = null
             this.timeOut = null
             this.employeesLogtimeDetails = {}
-            this.loadEmployeesLogtime()
+            // this.loadEmployeesLogtime()
             this.employeesLogtimeDetailsManual = {
                 ShortName: null,
                 LogDateTime: null,
@@ -827,7 +847,7 @@ export default {
                     TimeIn: `${dtToday} ${this.timeIn}`,
                     TimeOut: `${dtToday} ${this.timeOut}`,
                     NoHrs: (duration.hours) >= 8 ? 8 : parseFloat((duration.hours).toFixed(2)),
-                    Overtime: (duration.hours - 9).toFixed(2),
+                    Overtime: (duration.hours - 9).toFixed(2) >= 0.5 ? (duration.hours - 9).toFixed(2) : 0,
                     Undertime: 0,
                     Tardiness: 0
                 })
@@ -906,6 +926,68 @@ export default {
                     serialNo: `1${this.moment(val).format('YY')}${lastDate.Month}${code}`
                 }
             }
+        },
+        userLoggedOut(value) {
+            //Compute duration
+            let timeInVal = this.moment.utc(value.TimeIn)
+            let timeOutVal  = this.moment.utc(this.serverDateTime)
+            let timeLogOut = timeOutVal.format('YYYY-MM-DD HH:mm:ss')
+            if(this.moment(value.LogDateTime).format('YYYY-MM-DD') != timeOutVal.format('YYYY-MM-DD')) {
+                timeLogOut = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.moment(value.EndTime).format('HH:mm:ss')}`
+            }
+            let duration = this.calculateDates(timeOutVal, timeInVal)
+            let body = {
+                procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
+                values: [
+                    `LT${this.moment(value.LogDateTime).format('MMYYYY')}`, 
+                    value.ShortName, 
+                    value.IDCode,
+                    value.EmployeeCode, 
+                    value.LogDateTime,
+                    value.TimeIn,
+                    timeLogOut, //TimeOut
+                    parseFloat(duration.hours.toFixed(2) - 1), //NoHrs
+                    value.Undertime, 
+                    value.Tardiness, 
+                    value.Overtime, 
+                    value.ND, 
+                    value.Shift, 
+                    value.SW1, 
+                    1, 
+                    value.UserAcct, 
+                    value.UserAcctO, 
+                    value.UserTime, 
+                    value.UserTimeO, 
+                    value.ManualRem, 
+                    '121', //ManualRemO, 
+                    value.ND1, 
+                    value.ND2, 
+                    value.NoHrs1, 
+                    value.OTCode == 'RD' ? 'R' : 'O', // PayCode
+                    value.DayOff,
+                    value.OTCode,
+                    value.Meal,
+                    value.MealOCC,
+                    value.PostOT,
+                    value.Leave,
+                    value.TransIn,
+                    value.TransOut,
+                    value.DepartmentCode,
+                    value.SectionCode,
+                    value.TeamCode,
+                    value.DesignationCode,
+                    1
+                ]
+            }
+            // console.log(body)
+            // Work From Home
+            if(value.LogType == 1) {
+                this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+            }
+            this.$store.commit('CHANGE_USER_INFO', {})
+            this.$store.commit('CHANGE_USER_LOGGING', false)
+            this.$store.commit('CHANGE_SERVERDATETTIME', '')
+            this.$router.push("/")
         },
         updateORALogtime(value) {
             let cutOffValues = this.getCutOffValues(value.LogDateTime, value.EmployeeCode)
