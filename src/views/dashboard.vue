@@ -292,7 +292,7 @@ export default {
             }
             // console.log(body)
             // Work From Home
-            if(value.LogType == 1) {
+            if(value.LogType == 1 && !value.TimeOut) {
                 this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
             }
             this.$store.commit('CHANGE_USER_INFO', {})

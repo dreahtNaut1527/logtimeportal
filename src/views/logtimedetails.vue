@@ -297,7 +297,7 @@ export default {
                         1   
                     ]
                 }
-                console.log(body);
+                // console.log(body);
                 this.swal.fire({
                     title: 'Are you sure?',
                     text: "This data will be uploaded to admin",

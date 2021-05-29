@@ -311,18 +311,30 @@
                                 <v-container class="mb-n5">
                                     <v-row align="center" justify="center" dense>
                                         <v-col cols="12" md="6">
-                                            <v-card-actions class="ma-0 pa-0">
-                                                <v-card-text class="font-weight-bold">TimeIn:</v-card-text>
-                                                <v-spacer></v-spacer>
-                                                <timePicker :menu="timeInDialog" :timeValue.sync="timeIn" timeLabel="" />
-                                            </v-card-actions>                                            
+                                            <v-text-field
+                                                v-model="timeIn"
+                                                color="teal"
+                                                label="TimeIn"
+                                                append-icon="mdi-clock-outline"
+                                                v-mask="'##:##'"
+                                                hint="hh:mm"
+                                                persistent-hint
+                                                outlined
+                                                dense
+                                            ></v-text-field>                                             
                                         </v-col>
                                         <v-col cols="12" md="6">
-                                            <v-card-actions class="ma-0 pa-0">
-                                                <v-card-text class="font-weight-bold">TimeOut:</v-card-text>
-                                                <v-spacer></v-spacer>
-                                                <timePicker :menu="timeOutDialog" :timeValue.sync="timeOut" timeLabel="" />
-                                            </v-card-actions>                                            
+                                            <v-text-field
+                                                v-model="timeOut"
+                                                color="teal"
+                                                label="TimeOut"
+                                                append-icon="mdi-clock-outline"
+                                                v-mask="'##:##'"
+                                                hint="hh:mm"
+                                                persistent-hint
+                                                outlined
+                                                dense
+                                            ></v-text-field>                                         
                                         </v-col>
                                     </v-row>
                                     <v-row class="mb-n10" dense>
@@ -474,7 +486,6 @@
 
 <script>
 import datePicker from '@/components/datepicker'
-import timePicker from '@/components/timepicker'
 
 export default {
     data() {
@@ -486,8 +497,6 @@ export default {
             dateDialog: false,
             workFromHome: false,
             logtimeDialog: false,
-            timeInDialog: false,
-            timeOutDialog: false,
             dialog: false,
             printDialog: false,
             loading: true,
@@ -1030,16 +1039,16 @@ export default {
                 this.loadEmployeesLogtime()
             }
         },
-        timeIn() {
-            this.setLogtimeValues()
-        },
-        timeOut() {
-            this.setLogtimeValues()
+        timeOut(value) {
+            let dtToday = this.moment(this.serverDateTime).format('YYYY-MM-DD')
+            let valid = new Date(`${dtToday} ${value}`).getTime() > 0
+            if(valid) {
+                this.setLogtimeValues()
+            }
         }
     },
     components: {   
-        datePicker,
-        timePicker
+        datePicker
     }
 }
 </script>
