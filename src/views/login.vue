@@ -8,7 +8,16 @@
                             <v-col class="mt-n9" cols="12" md="12" >
                                 <v-card-text class="mt-n10 pa-0 text-center">
                                     <v-avatar size="126">
-                                        <v-img src="../assets/5578.jpg"></v-img>
+                                        <v-img src="../assets/5578.jpg">
+                                            <template v-slot:placeholder>
+                                                <v-sheet color="grey-lighten-4">
+                                                    <v-skeleton-loader
+                                                        class="mx-auto"
+                                                        type="image"
+                                                    ></v-skeleton-loader>
+                                                </v-sheet>
+                                            </template>
+                                        </v-img>
                                     </v-avatar>
                                 </v-card-text>
                             </v-col>

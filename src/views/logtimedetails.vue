@@ -48,7 +48,7 @@
                                                 <div v-if="item.TimeIn">
                                                     <v-btn 
                                                         @click="expand(!isExpanded)" 
-                                                        :disabled="moment(item.LogDateTime).format('YYYY-MM-DD') == moment(serverDateTime).format('YYYY-MM-DD')" 
+                                                        :disabled="moment(item.LogDateTime).format('YYYY-MM-DD') == moment(serverDateTime).format('YYYY-MM-DD') || item.LogType == 0" 
                                                         color="teal" 
                                                         icon
                                                     >
@@ -61,7 +61,7 @@
                                                             <div class="ml-6">{{moment(item.LogDateTime).format('YYYY-MM-DD')}}</div>
                                                         </v-col>
                                                         <v-col cols="12" md="10">
-                                                            {{ getLeaveDesc(item.Leave, item.OTCode) }}
+                                                            {{ getLeaveDesc(item.Leave, item.OTCode, item.TimeIn) }}
                                                         </v-col>
                                                     </v-row>
                                                 </div>
@@ -84,7 +84,7 @@
                                         <td :colspan="headers.length">
                                             <v-card outlined>
                                                 <v-card-title class="mb-n3 subtitle-2 font-weight-bold">
-                                                    {{item.LogType == 1 ? 'Manual Entry' : 'Admin Record'}}
+                                                    Manual Entry
                                                 </v-card-title>
                                                 <v-divider class="mx-3"></v-divider>
                                                 <v-container>
@@ -130,6 +130,7 @@
                                                     <v-spacer></v-spacer>
                                                     <v-btn 
                                                         color="teal" 
+                                                        :disabled="item.IsAdminUpload == 1"
                                                         dark
                                                         @click="saveEmployeeLogtimeData(item)"
                                                     >Save</v-btn>

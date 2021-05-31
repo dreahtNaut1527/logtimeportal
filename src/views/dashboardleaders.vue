@@ -297,7 +297,7 @@
                                                 <v-list-item-content>
                                                     <v-list-item-subtitle>Status:</v-list-item-subtitle>
                                                     <v-list-item-title class="font-weight-bold caption">
-                                                        {{getLeaveDesc(employeesLogtimeDetails.Leave, employeesLogtimeDetails.OTCode)}}
+                                                        {{getLeaveDesc(employeesLogtimeDetails.Leave, employeesLogtimeDetails.OTCode, employeesLogtimeDetails.TimeIn)}}
                                                     </v-list-item-title>
                                                 </v-list-item-content>
                                             </v-list-item>

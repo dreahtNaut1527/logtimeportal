@@ -90,7 +90,7 @@ const plugins = {
                 
                     return zeroString + n;
                 },
-                getLeaveDesc(leave, otcode) {
+                getLeaveDesc(leave, otcode, timein) {
                     let leaveDesc = null
                     let leaveList = [
                         {code: '1', text: 'Vacation'},
@@ -133,7 +133,7 @@ const plugins = {
                     if(!leaveDesc) {
                         otCodeList.forEach(rec => {
                             if (rec.code == otcode) {
-                                leaveDesc = (otcode == 'RD' ? 'Absent' : rec.text)
+                                leaveDesc = (otcode == 'RD' && !timein ? 'Absent' : rec.text)
                             }
                         })
                     }
