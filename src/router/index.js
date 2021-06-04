@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import store from '@/store'
+import md5 from 'md5'
 
 Vue.use(VueRouter)
 
@@ -11,19 +12,14 @@ const routes = [
     component: () => import(/* webpackChunkName: "about" */ '../views/login')
   },
   {
-    path: '/dashboard',
+    path: `/${md5('dashboard')}`,
     name: 'dashboard',
     component: () => import(/* webpackChunkName: "about" */ '../views/dashboard')
   },
   {
-    path: '/dashboardleaders',
+    path: `/${md5('dashboardleaders')}`,
     name: 'dashboardleaders',
     component: () => import(/* webpackChunkName: "about" */ '../views/dashboardleaders')
-  },
-  {
-    path: '/logtimedetails',
-    name: 'logtimedetails',
-    component: () => import(/* webpackChunkName: "about" */ '../views/logtimedetails')
   }
 ]
 
@@ -38,9 +34,9 @@ router.beforeEach((to, from, next) => {
     next('/') // Goto Login page
   } else if(to.path === '/' && store.state.logtimeuserinfo.EmployeeCode != undefined) { 
     if (store.state.logtimeuserinfo.UserLevel == 0) {
-      next('/dashboard')
+      next(`/${md5('dashboard')}`)
     } else {
-      next('/dashboardleaders')
+      next(`/${md5('dashboardleaders')}`)
     }
   } else {
     next()

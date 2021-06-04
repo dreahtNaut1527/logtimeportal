@@ -1,4 +1,4 @@
-import { mapState, mapMutations } from "vuex";
+import { mapState, mapMutations } from "vuex"
 import store from '../store'
 
 const plugins = {
@@ -44,25 +44,28 @@ const plugins = {
                     })
                 },
                 calculateDates(date1, date2) {  
-        
-                    let years = date1.diff(date2, 'year');
-                    date2.add(years, 'years');
-        
-                    let months = date1.diff(date2, 'months');
-                    date2.add(months, 'months');
-        
-                    let days = date1.diff(date2, 'days');
-                    date2.add(days, 'days');
-        
-                    let hours = date1.diff(date2, 'hours', true);
-                    date2.add(hours, 'hours');
-        
-                    let minutes = date1.diff(date2, 'minutes', true);
-                    date2.add(minutes, 'minutes');
-        
-                    let seconds = date1.diff(date2, 'seconds');
-        
-                    return {years, months, days, hours, minutes, seconds};
+                    let validDate1 = this.moment(date1, 'YYYY-MM-DD HH:mm:ss').isValid()
+                    let validDate2 = this.moment(date2, 'YYYY-MM-DD HH:mm:ss').isValid()
+                    if(validDate1 && validDate2) {
+                        let years = date1.diff(date2, 'year')
+                        date2.add(years, 'years')
+            
+                        let months = date1.diff(date2, 'months')
+                        date2.add(months, 'months')
+            
+                        let days = date1.diff(date2, 'days')
+                        date2.add(days, 'days')
+            
+                        let hours = date1.diff(date2, 'hours', true)
+                        date2.add(hours, 'hours')
+            
+                        let minutes = date1.diff(date2, 'minutes', true)
+                        date2.add(minutes, 'minutes')
+            
+                        let seconds = date1.diff(date2, 'seconds')
+            
+                        return {years, months, days, hours, minutes, seconds}
+                    }
                 },
                 checkAppVersion() {
                      let version = null
@@ -80,15 +83,15 @@ const plugins = {
                      })
                 },
                 zeroPad(num, numZeros) {
-                    let n = Math.abs(num);
-                    let zeros = Math.max(0, numZeros - Math.floor(n).toString().length );
-                    let zeroString = Math.pow(10,zeros).toString().substr(1);
+                    let n = Math.abs(num)
+                    let zeros = Math.max(0, numZeros - Math.floor(n).toString().length )
+                    let zeroString = Math.pow(10,zeros).toString().substr(1)
                     
                     if( num < 0 ) {
-                        zeroString = '-' + zeroString;
+                        zeroString = '-' + zeroString
                     }
                 
-                    return zeroString + n;
+                    return zeroString + n
                 },
                 getLeaveDesc(leave, otcode, timein) {
                     let leaveDesc = null

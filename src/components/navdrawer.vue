@@ -21,6 +21,32 @@ export default {
     },
     methods: {
         userLoggedOut(value) {
+            let curDateTime = this.moment.utc(this.serverDateTime)
+            let shiftEndTime = this.moment.utc(`${curDateTime.format('YYYY-MM-DD')} ${this.moment.utc(value.EndTime).format('HH:mm:ss')}`)
+            let duration = this.calculateDates(shiftEndTime, curDateTime)
+
+            if(!value.TimeOut && value.LogType == 1) {
+                if(duration.hours < 8) {
+                    this.swal.fire({
+                        title: 'Warning',
+                        text: 'Not yet end of shift. Do you want to logged out?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: 'teal',
+                        confirmButtonText: 'Log out'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.setUserLogOut(value)
+                        }
+                    })
+                } else {
+                    this.setUserLogOut(value)
+                }
+            } else {
+                this.setUserLogOut(value)
+            }
+        },
+        setUserLogOut(value) {
             //Compute duration
             let timeInVal = this.moment.utc(value.TimeIn)
             let timeOutVal  = this.moment.utc(this.serverDateTime)
@@ -39,10 +65,10 @@ export default {
                     value.LogDateTime,
                     value.TimeIn,
                     timeLogOut, //TimeOut
-                    parseFloat(duration.hours.toFixed(2) - 1), //NoHrs
-                    value.Undertime, 
+                    duration.hours >= 8 ? 8 : parseFloat((duration.hours).toFixed(2)), //NoHrs
+                    this.computeUndertime(value, timeOutVal), //value.Undertime, 
                     value.Tardiness, 
-                    value.Overtime, 
+                    this.computeOvertime(value, timeLogOut), //value.Overtime,
                     value.ND, 
                     value.Shift, 
                     value.SW1, 
@@ -81,7 +107,36 @@ export default {
             this.$store.commit('CHANGE_USER_LOGGING', false)
             this.$store.commit('CHANGE_SERVERDATETTIME', '')
             this.$router.push("/")
-        }
+        },
+        computeOvertime(value, timeOut) {
+            let dtToday = this.moment.utc(value.LogDateTime).format('YYYY-MM-DD')
+            let timeOutVal = this.moment.utc(timeOut)
+            let shiftEnd = this.moment.utc(value.EndTime)
+            let tempEndTime = this.moment.utc(`${dtToday} ${shiftEnd.format('HH:mm:ss')}`) 
+
+            if(timeOutVal > tempEndTime) {
+                let duration = this.calculateDates(timeOutVal, tempEndTime)
+                if(!isNaN(duration.hours) || duration.hours != undefined) {
+                    return duration.hours.toFixed(2) < 0.5 ? 0 : duration.hours.toFixed(2)
+                } else {
+                    return 0
+                }
+            } else {
+                return 0
+            }
+        },
+        computeUndertime(value, timeOut) {
+            let dtToday = this.moment.utc(value.LogDateTime).format('YYYY-MM-DD')
+            let timeOutVal = this.moment.utc(timeOut)
+            let shiftEnd = this.moment.utc(value.EndTime)
+            let tempEndTime = this.moment.utc(`${dtToday} ${shiftEnd.format('HH:mm:ss')}`)
+            let duration = this.calculateDates(tempEndTime, timeOutVal)
+            if(!isNaN(duration.hours) || duration.hours != undefined) {
+                return duration.hours <= 0 ? 0 : duration.hours - 1
+            } else {
+                return 0
+            }
+        },
     }
 }
 </script>       

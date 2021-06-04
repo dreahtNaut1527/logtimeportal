@@ -169,7 +169,7 @@ export default {
                         value.TimeOut, 
                         value.NoHrs, 
                         value.Undertime, 
-                        value.Tardiness,
+                        this.computeTardiness(value, dtToday.format('YYYY-MM-DD HH:mm:ss')), //value.Tardiness,
                         value.Overtime, 
                         value.ND, 
                         value.Shift, 
@@ -201,7 +201,7 @@ export default {
                     ]
                 }
                 // console.log(body)
-                // Update Logtime Table
+                //Update Logtime Table
                 this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
                 setTimeout(() => {
                     this.getLogTimeTableRecord()
@@ -209,6 +209,19 @@ export default {
                 }, 2000)
             } else {
                 this.getLogTimeTableRecord()
+            }
+        },
+        computeTardiness(data, timeIn) {
+            let dtToday = this.moment.utc(data.LogDateTime).format('YYYY-MM-DD')
+            let timeInVal = this.moment.utc(timeIn)
+            let shiftStartTime = this.moment.utc(data.StartTime)
+            let tempStartTime = this.moment.utc(`${dtToday} ${shiftStartTime.format('hh:mm:ss')}`)
+            let duration = this.calculateDates(timeInVal, tempStartTime)
+            
+            if(isNaN(duration.hours) || duration.hours == undefined) {
+                return 0 
+            } else {
+                return duration.hours < 0 ? 0 : duration.hours.toFixed(2)
             }
         },
         getLogTimeTableRecord() {
@@ -225,9 +238,9 @@ export default {
                 this.$store.commit('CHANGE_USER_INFO', tempEmployeeData)
                 this.$store.commit('CHANGE_USER_LOGGING', true)
                 if(tempEmployeeData.UserLevel == 0) {
-                    this.$router.push('/dashboard')
+                    this.$router.push(`/${this.md5('dashboard')}`)
                 } else {
-                    this.$router.push('/dashboardleaders')
+                    this.$router.push(`/${this.md5('dashboardleaders')}`)
                 }
             })
         },

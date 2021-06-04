@@ -146,8 +146,8 @@ export default {
                 {text: 'Type', value: 'LogTypeDesc'}
             ],
             logOutOptions: {
-                title: 'Are you sure?',
-                text: "You won't be able to login in this system!",
+                title: 'Warning',
+                text: "Do you want to logged out?",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Logout',
