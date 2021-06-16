@@ -4,91 +4,104 @@
         <v-container>
             <v-row justify="center">
                 <v-col cols="12" md="12">
-                    <v-row>
-                        <v-col cols="12" md="3">
-                            <datePicker :menu="dateDialog" :dateValue.sync="dtLogtime" dateLabel="Logdate" /> 
-                        </v-col>
-                        <v-col v-if="logtimeuserinfo.UserLevel == 9" cols="12" md="3">
-                            <v-autocomplete
-                                v-model="department"
-                                label="Department"
-                                :items="departmentList"
-                                item-text="DepartmentName"
-                                item-value="DepartmentName"
-                                color="teal"
-                                hide-details
-                                clearable
-                                outlined
-                                dense
-                            ></v-autocomplete>
-                        </v-col>
-                        <v-col cols="12" md="3">
-                            <v-autocomplete
-                                v-model="section"
-                                label="Section"
-                                :items="sectionList"
-                                item-text="SectionName"
-                                item-value="SectionName"
-                                color="teal"
-                                hide-details
-                                clearable
-                                outlined
-                                dense
-                            ></v-autocomplete>
-                        </v-col>
-                        <v-col cols="12" md="3">
-                            <v-autocomplete
-                                v-model="team"
-                                label="Team"
-                                :items="teamList"
-                                item-text="TeamName"
-                                item-value="TeamName"
-                                color="teal"
-                                hide-details
-                                clearable
-                                outlined
-                                dense
-                            ></v-autocomplete>
-                        </v-col>
-                        <v-col cols="12" md="3">
-                            <v-select
-                                v-model="selectedOptions"
-                                :items="options"
-                                color="teal"
-                                hide-details
-                                outlined
-                                dense
-                            ></v-select>
-                        </v-col>
-                        <v-col cols="12" md="11">
-                            <v-text-field
-                                v-model="searchTable"
-                                placeholder="Search Code, Name, etc..." 
-                                append-icon="mdi-magnify"
-                                color="teal"
-                                hide-details
-                                clearable
-                                outlined
-                                dense
-                            ></v-text-field>
-                        </v-col>
-                        <v-col cols="12" md="1">
-                            <v-tooltip bottom>
-                                <template v-slot:activator="{ on, attrs }">
-                                    <v-btn 
-                                        @click="printDialog = !printDialog" 
-                                        color="teal" 
-                                        v-on="on"
-                                        v-bind="attrs"
-                                        dark
-                                    >
-                                        <v-icon>mdi-printer</v-icon>
-                                    </v-btn>
-                                </template>
-                                <span>Print Data</span>
-                            </v-tooltip> 
-                        </v-col>
-                    </v-row>
+                    <v-card outlined>
+                        <v-toolbar color="teal" dense dark>
+                            <v-toolbar-title>Filter</v-toolbar-title>
+                        </v-toolbar>
+                        <v-container>
+                            <v-row dense>
+                                <!-- <v-col v-for="(item, i) in dateRange" :key="i" cols="12" md="2">
+                                    <datePicker :menu="item.dialog" :dateValue.sync="item.value" :dateLabel="item.text" /> 
+                                </v-col> -->
+                                <v-col cols="12" md="2">
+                                    <datePicker :menu="dateDialog" :dateValue.sync="dtLogtime" dateLabel="Logdate" /> 
+                                </v-col>
+                                <v-col v-if="logtimeuserinfo.UserLevel == 9" cols="12" md="3">
+                                    <v-autocomplete
+                                        v-model="department"
+                                        label="Department"
+                                        :items="departmentList"
+                                        item-text="DepartmentName"
+                                        item-value="DepartmentName"
+                                        color="teal"
+                                        hide-details
+                                        clearable
+                                        outlined
+                                        dense
+                                    ></v-autocomplete>
+                                </v-col>
+                                <v-col cols="12" md="3">
+                                    <v-autocomplete
+                                        v-model="section"
+                                        label="Section"
+                                        :items="sectionList"
+                                        item-text="SectionName"
+                                        item-value="SectionName"
+                                        color="teal"
+                                        hide-details
+                                        clearable
+                                        outlined
+                                        dense
+                                    ></v-autocomplete>
+                                </v-col>
+                                <v-col cols="12" md="3">
+                                    <v-autocomplete
+                                        v-model="team"
+                                        label="Team"
+                                        :items="teamList"
+                                        item-text="TeamName"
+                                        item-value="TeamName"
+                                        color="teal"
+                                        hide-details
+                                        clearable
+                                        outlined
+                                        dense
+                                    ></v-autocomplete>
+                                </v-col>
+                                <v-col cols="12" md="3">
+                                    <v-select
+                                        v-model="selectedOptions"
+                                        :items="options"
+                                        color="teal"
+                                        hide-details
+                                        outlined
+                                        dense
+                                    ></v-select>
+                                </v-col>
+                                <v-col cols="12" md="8">
+                                    <v-text-field
+                                        v-model="searchTable"
+                                        placeholder="Search Code, Name, etc..." 
+                                        append-icon="mdi-magnify"
+                                        color="teal"
+                                        hide-details
+                                        clearable
+                                        outlined
+                                        dense
+                                    ></v-text-field>
+                                </v-col>
+                                <v-col cols="12" md="4">
+                                    <v-btn class="mx-2 caption" color="teal" dark>Confirm All</v-btn>
+                                    <v-btn class="mx-2 caption" color="teal" dark>Half-Day All</v-btn>
+                                    <v-tooltip bottom>
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-btn 
+                                                class="mx-2"
+                                                @click="printDialog = !printDialog" 
+                                                color="teal" 
+                                                v-on="on"
+                                                v-bind="attrs"
+                                                dark
+                                            >
+                                                <v-icon>mdi-printer</v-icon>
+                                            </v-btn>
+                                        </template>
+                                        <span>Print Data</span>
+                                    </v-tooltip> 
+                                </v-col>
+                            </v-row>
+                        </v-container>
+                    </v-card>
                     <v-lazy transition="scroll-y-reverse-transition" :options="{ threshold: 0.8 }">
                         <v-card class="mt-4">
                             <v-container>
@@ -98,42 +111,58 @@
                                     :loading="loading"
                                     :page.sync="page"
                                     :search="searchTable"
+                                    :expanded.sync="expanded"
+                                    :single-expand="true"
                                     loading-text="Loading Data. . .Please Wait"
+                                    item-key="EmployeeCode"
                                     @page-count="pageCount = $event"
                                     hide-default-footer
+                                    show-expand
+                                    dense
                                 >
-                                    <template v-slot:item="props">
-                                        <tr :style="!props.item.TimeIn ? 'color: #b71c1c;' : ''">
-                                            <td>{{props.item.EmployeeCode}}</td>
-                                            <td>{{props.item.EmployeeName}}</td>
-                                            <td>{{!props.item.TimeIn ? '' : moment.utc(props.item.TimeIn).format('HH:mm:ss')}}</td>
-                                            <td>{{!props.item.TimeOut ? '' : moment.utc(props.item.TimeOut).format('HH:mm:ss')}}</td>
-                                            <td class="text-center">{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
-                                            <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Tardiness}}</td>
-                                            <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Undertime}}</td>
-                                            <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Overtime}}</td>
+                                    <template v-slot:item="{ item, expand, isExpanded }">
+                                        <tr :style="!item.TimeIn ? 'color: #b71c1c;' : ''">
                                             <td>
-                                                <v-chip v-if="props.item.TimeIn" :color="props.item.IsAdminUpload == 1 ? 'success' : 'error'">
-                                                    {{props.item.IsAdminUpload == 1 ? 'Confirmed' : 'For Confirmation'}}
+                                                <v-btn @click="expand(!isExpanded)" small icon>
+                                                    <v-icon>{{ isExpanded ? 'mdi-minus-box-outline' : 'mdi-plus-box-outline' }}</v-icon>
+                                                </v-btn>
+                                            </td>
+                                            <td>{{item.EmployeeCode}}</td>
+                                            <td>{{item.EmployeeName}}</td>
+                                            <td>{{!item.TimeIn ? '' : moment.utc(item.TimeIn).format('HH:mm:ss')}}</td>
+                                            <td>{{!item.TimeOut ? '' : moment.utc(item.TimeOut).format('HH:mm:ss')}}</td>
+                                            <td class="text-center">{{!item.TimeIn ? "" : item.NoHrs}}</td>
+                                            <td>
+                                                <v-chip v-if="item.TimeIn" :color="item.IsAdminUpload == 1 ? 'success' : 'error'" small>
+                                                    {{item.IsAdminUpload == 1 ? 'Confirmed' : 'For Confirmation'}}
                                                 </v-chip>
-                                                <v-chip v-else>
-                                                    {{getLeaveDesc(props.item.Leave, props.item.OTCode, props.item.TimeIn)}}
+                                                <v-chip v-else small>
+                                                    {{getLeaveDesc(item.Leave, item.OTCode, item.TimeIn)}}
                                                 </v-chip>
                                             </td>
                                             <td>
                                                 <v-btn 
-                                                    @click="viewEmployeeLogtimeDetails(props.item)" 
-                                                    :disabled="!props.item.TimeIn"
+                                                    @click="viewEmployeeLogtimeDetails(item)" 
+                                                    :disabled="!item.TimeOut"
+                                                    :dark ="item.TimeOut !== null"
                                                     elevation="3" 
                                                     color="teal" 
-                                                    dark 
+                                                    x-small
                                                     fab 
-                                                    small
                                                 >
-                                                    <v-icon>{{ props.item.LogType == 1 ? 'mdi-pencil' : 'mdi-eye'}}</v-icon>
+                                                    <v-icon small>{{ item.LogType == 1 ? 'mdi-pencil' : 'mdi-eye'}}</v-icon>
                                                 </v-btn>
                                             </td>
                                         </tr>
+                                    </template>
+                                    <template v-slot:expanded-item="{ headers, item }">
+                                        <td :colspan="headers.length">
+                                            <v-card class="mt-2" outlined>
+                                                <v-container>
+                                                    {{item.StartTime}}
+                                                </v-container>
+                                            </v-card>
+                                        </td>
                                     </template>
                                 </v-data-table> 
                                 <v-pagination
@@ -284,6 +313,7 @@
                                         <v-checkbox 
                                             v-model="isHalfDay" 
                                             @change="setHalfDay(employeesLogtimeDetails)"
+                                            :disabled="!isManual"
                                             label="Half Day" 
                                             color="teal" 
                                             dense
@@ -359,6 +389,7 @@ export default {
             dateToday: '',
             searchTable: '',
             dtLogtime: '',
+            expanded: [],
             employeesLogtime: [],
             tempLogtimeRecords: [],
             employeesLogtimeDetails: {},
@@ -372,14 +403,12 @@ export default {
                 {text: 'Date To', value: this.moment.utc(this.serverDateTime).format('YYYY-MM-DD'), dialog: false}
             ],
             headers: [
+                {text: '', value: 'data-table-expand' },
                 {text: 'Code', value: 'EmployeeCode'},
                 {text: 'Name', value: 'EmployeeName'},
                 {text: 'Time In', value: 'TimeIn'},
                 {text: 'Time Out', value: 'TimeOut'},
                 {text: 'Hours', value: 'NoHrs'},
-                {text: 'Tardiness', value: 'Tardiness'},
-                {text: 'Undertime', value: 'Undertime'},
-                {text: 'Overtime', value: 'Overtime'},
                 {text: 'Status', value: ''},
                 {text: 'Actions', value: ''}
             ],
