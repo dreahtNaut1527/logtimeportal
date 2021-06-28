@@ -52,14 +52,22 @@
                             </v-row>    
                         </v-col>
                         <v-col cols="12" md="12">
-                            <v-sheet height="570" elevation="8" class="rounded-xl">
-                                <v-container fluid>
+                            <v-card elevation="8" class="rounded-xl">
+                                <v-container v-if="!calendarView" fluid>
                                     <v-toolbar flat>
                                         <v-toolbar-title class="font-weight-bold">Logtime</v-toolbar-title>
                                         <v-spacer></v-spacer>
-                                        <v-btn class="mx-3" @click="prevMonth()" color="teal" x-small dark fab><v-icon>mdi-chevron-left</v-icon></v-btn>
+                                        <v-btn class="mx-3" @click="prevMonth()" :disabled="loading" :dark="!loading" color="teal" x-small fab><v-icon>mdi-chevron-left</v-icon></v-btn>
                                         {{moment(dtLogtime).format("MMMM YYYY")}}
-                                        <v-btn class="mx-3" @click="nextMonth()" color="teal" x-small dark fab><v-icon>mdi-chevron-right</v-icon></v-btn>
+                                        <v-btn class="mx-3" @click="nextMonth()" :disabled="loading" :dark="!loading" color="teal" x-small fab><v-icon>mdi-chevron-right</v-icon></v-btn>
+                                        <v-tooltip bottom>
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-btn @click="calendarView = !calendarView" v-on="on" v-bind="attrs" color="teal" x-small dark fab>
+                                                    <v-icon>mdi-calendar</v-icon>
+                                                </v-btn>
+                                            </template>
+                                            <span>Calendar View</span>
+                                        </v-tooltip>
                                     </v-toolbar>
                                     <v-divider></v-divider>
                                     <v-data-table
@@ -67,21 +75,42 @@
                                         :items="filterLogtime"
                                         :loading="loading"
                                         :page.sync="page"
-                                        :items-per-page="8"
-                                        loading-text="Loading Data. . .Please Wait"
+                                        :items-per-page="9"
+                                        loading-text=""
                                         @page-count="pageCount = $event"
                                         hide-default-footer
                                     >
+                                    
+                                        <template v-slot:progress>
+                                            <v-sheet height="300">
+                                                <v-container class="fill-height">
+                                                    <v-row class="text-center" align="center" justify="center">
+                                                        <v-col cols="12" md="12">
+                                                            <v-progress-circular
+                                                                :size="70"
+                                                                :width="7"
+                                                                color="teal"
+                                                                indeterminate
+                                                            ></v-progress-circular>
+                                                        </v-col>
+                                                        <v-subheader>Loading Data. . .Please Wait</v-subheader>
+                                                    </v-row>
+                                                </v-container>
+                                            </v-sheet>
+                                        </template>
                                         <template v-slot:item="props">
-                                            <tr :style="!props.item.TimeIn ? 'color: #b71c1c;' : ''">
+                                            <tr :style="!props.item.TimeIn ? 'background-color: rgb(255, 177, 193, 0.5);' : ''">
                                                 <td>{{props.item.LogDateTime}}</td>
-                                                <td>{{!props.item.TimeIn ? '' : moment(props.item.TimeIn).format('HH:mm:ss')}}</td>
-                                                <td>{{!props.item.TimeOut ? '' : moment(props.item.TimeOut).format('HH:mm:ss')}}</td>
-                                                <td class="text-center">{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
-                                                <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Tardiness}}</td>
-                                                <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Undertime}}</td>
-                                                <td class="text-center">{{!props.item.TimeIn ? "" : props.item.Overtime}}</td>
-                                                <td>
+                                                <td v-if="!props.item.TimeIn" :colspan="!props.item.TimeIn ? 7 : 0">
+                                                    <v-card-text class="text-center body-1" color="red">{{getLeaveDesc(props.item.Leave, props.item.OTCode, props.item.TimeIn)}}</v-card-text>
+                                                </td>
+                                                <td v-if="props.item.TimeIn">{{!props.item.TimeIn ? '' : moment(props.item.TimeIn).format('HH:mm:ss')}}</td>
+                                                <td v-if="props.item.TimeIn">{{!props.item.TimeOut ? '' : moment(props.item.TimeOut).format('HH:mm:ss')}}</td>
+                                                <td v-if="props.item.TimeIn" class="text-center">{{!props.item.TimeIn ? "" : props.item.NoHrs}}</td>
+                                                <td v-if="props.item.TimeIn" class="text-center">{{!props.item.TimeIn ? "" : props.item.Tardiness}}</td>
+                                                <td v-if="props.item.TimeIn" class="text-center">{{!props.item.TimeIn ? "" : props.item.Undertime}}</td>
+                                                <td v-if="props.item.TimeIn" class="text-center">{{!props.item.TimeIn ? "" : props.item.Overtime}}</td>
+                                                <td v-if="props.item.TimeIn">
                                                     <v-chip v-if="props.item.TimeIn" :color="props.item.LogType == 1 ? 'orange' : 'green'" dark>
                                                         {{props.item.LogTypeDesc}}
                                                     </v-chip>
@@ -89,21 +118,26 @@
                                             </tr>
                                         </template>
                                     </v-data-table>
+                                    <v-divider></v-divider>
                                     <v-pagination
                                         v-model="page"
+                                        class="mt-5"
                                         color="teal"
                                         :length="pageCount"
                                         :total-visible="10"
                                     ></v-pagination>
                                 </v-container>
-                            </v-sheet>
+                                <v-container v-else>
+                                    <calendarview :IsCalendarView.sync="calendarView" />
+                                </v-container>
+                            </v-card>
                         </v-col>
                     </v-row>
                 </v-col>
                 <v-col cols="12" md="3">
                     <v-card elevation="7" class="rounded-xl">
                         <v-img :src="imgClock" :aspect-ratio="16/9"></v-img>
-                        <v-card-text class="text-center">{{strGreetings}}</v-card-text>
+                        <v-card-text class="text-center font-weight-bold">{{strGreetings}}</v-card-text>
                         <v-sheet height="300">
                             <v-container class="fill-height">
                                 <v-card-text class="text-center">
@@ -112,7 +146,7 @@
                             </v-container>
                         </v-sheet>
                         <v-card-actions class="px-7">
-                            <v-btn class="my-3" @click="userLoggedOut()" color="teal darken-1" block dark>Log-out</v-btn>
+                            <v-btn class="font-weight-bold my-3 py-9 text-h5" @click="userLoggedOut()" color="teal darken-1" block dark>Log-out</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-col>
@@ -122,10 +156,13 @@
 </template>
 
 <script>
+import calendarview from '@/components/calendarview'
+
 export default {
     data() {
         return {
             loading: true,
+            calendarView: false,
             totalHours: 0,
             pageCount: 0,
             page: 1,
@@ -326,6 +363,9 @@ export default {
                 rec.TimeOut = rec.TimeOut != null ? this.moment.utc(rec.TimeOut) : null
             })
         }
+    },
+    components: {
+        calendarview
     }
 }
 </script>

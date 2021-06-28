@@ -6,8 +6,6 @@
         </v-avatar>
         <v-toolbar-items>
             <v-card-text>{{logtimeuserinfo.FirstName}}</v-card-text>
-            <v-spacer></v-spacer>
-            <v-btn v-if="logtimeuserinfo.UserLevel != 0" @click="userLoggedOut(logtimeuserinfo)" icon><v-icon>mdi-logout</v-icon></v-btn>
         </v-toolbar-items>
     </v-app-bar>
 </template>

@@ -109,7 +109,7 @@ const plugins = {
                         {code: 'V', text: 'NW Vacation'},
                         {code: 'W', text: 'NW Without Pay'},
                         {code: 'I', text: 'Indefinite'},
-                        {code: 'E', text: 'Allocation of Mat. Leave'},
+                        {code: 'E', text: 'Allocation of Mat.'},
                         {code: 'A', text: 'Maternity Solo Parent'}
                     ]
 
@@ -127,10 +127,9 @@ const plugins = {
                     // Return Leave
                     leaveList.forEach(rec => {
                         if(rec.code == leave) {
-                            leaveDesc = rec.text
+                            leaveDesc = `${rec.text} Leave`
                         }
                     })
-
 
                     // Return OTCode
                     if(!leaveDesc) {
@@ -141,7 +140,7 @@ const plugins = {
                         })
                     }
 
-                    return leaveDesc
+                    return leaveDesc.toUpperCase()
                 }
             }
         })

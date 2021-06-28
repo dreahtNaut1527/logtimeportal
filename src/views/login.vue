@@ -235,7 +235,7 @@ export default {
             }
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                 tempEmployeeData = res.data[0]
-                if(!tempEmployeeData.TimeOut) {
+                if(!tempEmployeeData.TimeOut && tempEmployeeData.LogType == 1) {
                     this.updateORALogtime(tempEmployeeData)
                 } else {
                     this.$store.commit('CHANGE_USER_INFO', tempEmployeeData)
