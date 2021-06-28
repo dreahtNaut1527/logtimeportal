@@ -21,27 +21,18 @@ export default {
     },
     methods: {
         userLoggedOut(value) {
-            let curDateTime = this.moment.utc(this.serverDateTime)
-            let shiftEndTime = this.moment.utc(`${curDateTime.format('YYYY-MM-DD')} ${this.moment.utc(value.EndTime).format('HH:mm:ss')}`)
-            let duration = this.calculateDates(shiftEndTime, curDateTime)
-
             if(!value.TimeOut && value.LogType == 1) {
-                if(duration.hours < 8) {
-                    this.swal.fire({
-                        title: 'Warning',
-                        text: 'Not yet end of shift. Do you want to logged out?',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: 'teal',
-                        confirmButtonText: 'Log out'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            this.setUserLogOut(value)
-                        }
-                    })
-                } else {
-                    this.setUserLogOut(value)
-                }
+                this.swal.fire({
+                    text: 'Do you want to logged out?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: 'teal',
+                    confirmButtonText: 'Log out'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        this.setUserLogOut(value)
+                    }
+                })
             } else {
                 this.setUserLogOut(value)
             }

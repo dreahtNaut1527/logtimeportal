@@ -16,11 +16,6 @@ const routes = [
     name: 'dashboard',
     component: () => import(/* webpackChunkName: "about" */ '../views/dashboard')
   },
-  {
-    path: `/${md5('dashboardleaders')}`,
-    name: 'dashboardleaders',
-    component: () => import(/* webpackChunkName: "about" */ '../views/dashboardleaders')
-  }
 ]
 
 const router = new VueRouter({
@@ -33,11 +28,7 @@ router.beforeEach((to, from, next) => {
   if(to.path !== '/' && store.state.logtimeuserinfo.EmployeeCode == undefined) {
     next('/') // Goto Login page
   } else if(to.path === '/' && store.state.logtimeuserinfo.EmployeeCode != undefined) { 
-    if (store.state.logtimeuserinfo.UserLevel == 0) {
-      next(`/${md5('dashboard')}`)
-    } else {
-      next(`/${md5('dashboardleaders')}`)
-    }
+    next(`/${md5('dashboard')}`)
   } else {
     next()
   }

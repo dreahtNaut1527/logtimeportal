@@ -1,7 +1,7 @@
 <template>
     <v-main class="grey lighten-4">
         <v-card-text class="display-1 font-weight-bold">Dashboard</v-card-text>
-        <v-container>
+        <v-container fluid>
             <v-row>
                 <v-col cols="12" md="9">
                     <v-row>
@@ -53,7 +53,7 @@
                         </v-col>
                         <v-col cols="12" md="12">
                             <v-sheet height="570" elevation="8" class="rounded-xl">
-                                <v-container>
+                                <v-container fluid>
                                     <v-toolbar flat>
                                         <v-toolbar-title class="font-weight-bold">Logtime</v-toolbar-title>
                                         <v-spacer></v-spacer>

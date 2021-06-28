@@ -1,8 +1,8 @@
 <template>
     <v-main class="teal lighten-3">
-        <v-container class="fill-height">
+        <v-container class="fill-height" fluid>
             <v-row align="center" justify="center">
-                <v-col cols="12" md="4">
+                <v-col cols="12" lg="3" md="5" sm="7">
                     <v-card class="rounded-lg" elevation="12">
                         <v-row align="center" justify="center">
                             <v-col class="mt-n9" cols="12" md="12" >
@@ -25,7 +25,7 @@
                         <v-row align="center" justify="center">
                             <v-col cols="12" md="11">                                
                                 <v-card-text class="text-center headline">Login to your account</v-card-text>
-                                <v-container>
+                                <v-container fluid>
                                 <v-alert
                                     class="pa-2 mb-5"
                                     v-model="alert"
@@ -175,9 +175,9 @@ export default {
                         value.Shift, 
                         1, // SW1
                         value.SW2,
-                        value.UserAcct, 
+                        'PORTAL', //value.UserAcct, 
                         value.UserAcctO, 
-                        value.UserTime, 
+                        dtToday.format('YYYY-MM-DD HH:mm:ss'), //value.UserTime, 
                         value.UserTimeO, 
                         '121', // Manual Rem
                         value.ManualRemO, 
@@ -193,7 +193,7 @@ export default {
                         value.Leave,
                         value.TransIn,
                         value.TransOut,
-                        value.DepartmentCode,
+                        value.DepartmentCode, 
                         value.SectionCode,
                         value.TeamCode,
                         value.DesignationCode,
@@ -235,14 +235,75 @@ export default {
             }
             this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
                 tempEmployeeData = res.data[0]
-                this.$store.commit('CHANGE_USER_INFO', tempEmployeeData)
-                this.$store.commit('CHANGE_USER_LOGGING', true)
-                if(tempEmployeeData.UserLevel == 0) {
-                    this.$router.push(`/${this.md5('dashboard')}`)
+                if(!tempEmployeeData.TimeOut) {
+                    this.updateORALogtime(tempEmployeeData)
                 } else {
-                    this.$router.push(`/${this.md5('dashboardleaders')}`)
+                    this.$store.commit('CHANGE_USER_INFO', tempEmployeeData)
+                    this.$store.commit('CHANGE_USER_LOGGING', true)
+                    this.$router.push(`/${this.md5('dashboard')}`)
                 }
             })
+        },
+        updateORALogtime(value) {
+            let dtToday = this.moment.utc(this.serverDateTime)
+            let cutOffValues = this.getCutOffValues(value.LogDateTime, value.EmployeeCode)
+            let body = {
+                server: process.env.NODE_ENV ==='production' ? `HRIS${value.ShortName}` : `HRIS${value.ShortName.toLowerCase()}test`,
+                procedureName: 'HRIS.PROCUPDATELOGTIME',
+                values: [
+                    value.EmployeeCode, 
+                    this.moment(value.LogDateTime).format('YYYY-MM-DD'),
+                    `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(value.StartTime).format('HH:mm:ss')}`,
+                    `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(value.EndTime).format('HH:mm:ss')}`,
+                    8, 
+                    0, 
+                    0,
+                    0,
+                    1, 
+                    1, 
+                    'R',
+                    '121', 
+                    '121', 
+                    cutOffValues.serialNo,
+                    cutOffValues.cutOffDate,
+                    '4',
+                    'PORTAL',
+                    this.moment().format('YYYY-MM-DD')
+                ]
+            }
+            // console.log(body)
+            this.axios.post(`${this.asd_sql}/ora_procedure.php`, {data: JSON.stringify(body)}).then(() => {
+                this.$store.commit('CHANGE_USER_INFO', value)
+                this.$store.commit('CHANGE_USER_LOGGING', true)
+                this.$router.push(`/${this.md5('dashboard')}`)
+            })
+        },
+        getCutOffValues(val, code) {
+            let lastDate = {}
+            let dayVal = this.moment(val).format('DD')
+            if(dayVal >= 6 && dayVal <= 20) {
+                lastDate = {
+                    Year: this.moment(val).format('YYYY'),
+                    Month: this.moment(val).format('MM'),
+                    Day: this.moment(val).daysInMonth('D')
+                } 
+                return {
+                    cutOff: 2,
+                    cutOffDate: this.moment(`${lastDate.Year}-${lastDate.Month}-${lastDate.Day}`).endOf('month').format('YYYY-MM-DD'),
+                    serialNo: `2${this.moment(val).format('YY')}${lastDate.Month}${code}`
+                }
+            } else {
+                lastDate = {
+                    Year: this.moment(val).format('YYYY'),
+                    Month: dayVal >= 1 && dayVal <= 5 ? this.moment(val).format('MM') : this.moment(val).add(1, 'months').format('MM'),
+                    Day: this.moment(val).daysInMonth('D')
+                } 
+                return {
+                    cutOff: 1,
+                    cutOffDate: this.moment(`${lastDate.Year}-${lastDate.Month}-15`).format('YYYY-MM-DD'),
+                    serialNo: `1${this.moment(val).format('YY')}${lastDate.Month}${code}`
+                }
+            }
         },
         clearVariables() {  
             this.alert = false
