@@ -1,12 +1,14 @@
 <template>
     <v-app id="inspire">
-        <navdrawer v-if="logtimeuserinfo.EmployeeCode != undefined" />
+        <navdrawer v-if="logtimeInfo.userinfo.EmployeeCode != undefined" />
         <router-view />
+        <navfooter v-if="logtimeInfo.userinfo.EmployeeCode != undefined" />
     </v-app>
 </template>
 
 <script>
 import navdrawer from "@/components/navdrawer";
+import navfooter from "@/components/navfooter";
 
 export default {
     mounted() {
@@ -15,7 +17,8 @@ export default {
         }, 1000);
     },
     components: {
-        navdrawer
+        navdrawer,
+        navfooter
     }
 }
 </script>

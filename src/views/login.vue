@@ -144,12 +144,13 @@ export default {
             }
         },
         setTimeIn(value) {
+            this.getServerDateTime()
             this.loading = true
             let dtToday = null
             let startShift = this.moment.utc(value.StartTime)
             let endShift = this.moment.utc(value.EndTime)
                 
-            dtToday = this.moment.utc(this.serverDateTime)
+            dtToday = this.moment.utc(this.logtimeInfo.serverDateTime)
 
             // format shift for ORACLE
             value.StartTime = `${dtToday.format('YYYY-MM-DD')} ${startShift.format('HH:mm:ss')}`
@@ -245,7 +246,7 @@ export default {
             })
         },
         updateORALogtime(value) {
-            let dtToday = this.moment.utc(this.serverDateTime)
+            let dtToday = this.moment.utc(this.logtimeInfo.serverDateTime)
             let cutOffValues = this.getCutOffValues(value.LogDateTime, value.EmployeeCode)
             let body = {
                 server: process.env.NODE_ENV ==='production' ? `HRIS${value.ShortName}` : `HRIS${value.ShortName.toLowerCase()}test`,
@@ -267,12 +268,13 @@ export default {
                     cutOffValues.serialNo,
                     cutOffValues.cutOffDate,
                     '4',
-                    'PORTAL',
+                    'PORTA',
                     this.moment().format('YYYY-MM-DD')
                 ]
             }
             // console.log(body)
-            this.axios.post(`${this.asd_sql}/ora_procedure.php`, {data: JSON.stringify(body)}).then(() => {
+            this.axios.post(`${this.asd_sql}/ora_procedure.php`, {data: JSON.stringify(body)}).then(res => {
+                console.log(res.data);
                 this.$store.commit('CHANGE_USER_INFO', value)
                 this.$store.commit('CHANGE_USER_LOGGING', true)
                 this.$router.push(`/${this.md5('dashboard')}`)

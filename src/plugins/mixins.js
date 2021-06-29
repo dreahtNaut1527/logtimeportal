@@ -9,6 +9,7 @@ const plugins = {
                     // api: process.env.VUE_APP_LOCAL_URL,
                     // api: process.env.VUE_APP_URL,
                     api: null,
+                    logtimeDateTime: '',
                     server: process.env.VUE_APP_SERVER,
                     asd_sql: process.env.VUE_APP_ASD_SQL,
                     photo: process.env.VUE_APP_PHOTO
@@ -21,11 +22,7 @@ const plugins = {
             },
             computed: {
                 ...mapState([
-                     'logtimeuserinfo', 
-                     'isLoggedIn', 
-                     'isConnect',
-                     'appVersion',
-                     'serverDateTime'
+                     'logtimeInfo', 
                 ])
             },
             methods: {
@@ -33,7 +30,6 @@ const plugins = {
                      'CHANGE_USER_INFO', 
                      'CHANGE_USER_LOGGING', 
                      'CHANGE_CONNECTION',
-                     'CHANGE_APP_VERSION',
                      'CHANGE_SERVERDATETTIME'
                 ]),
                 getServerDateTime() {
@@ -68,19 +64,28 @@ const plugins = {
                     }
                 },
                 checkAppVersion() {
-                     let version = null
-                     this.axios.get(`${this.server}/appversion`).then(res => {
-                          version = res.data
-                          if(version != this.appVersion) {
-                                this.$store.commit('CHANGE_APP_VERSION', version)
-                                this.$store.commit('CHANGE_USER_INFO', {})
-                                this.$store.commit('CHANGE_USER_LOGGING', false)
-                                this.$store.commit('CHANGE_SERVERDATETTIME', '')
-                                if(this.$route.name != 'login') {
-                                        this.$router.push('/')
-                                }
-                          }
-                     })
+                     let version = this.logtimeInfo.appVersion
+                     if(version != process.env.VUE_APP_VERSION) {
+                           this.$store.commit('CHANGE_APP_VERSION', process.env.VUE_APP_VERSION)
+                           this.$store.commit('CHANGE_USER_INFO', {})
+                           this.$store.commit('CHANGE_USER_LOGGING', false)
+                           this.$store.commit('CHANGE_SERVERDATETTIME', '')
+                           if(this.$route.name != 'login') {
+                               this.$router.push('/')
+                           }
+                     }
+                    //  this.axios.get(`${this.server}/appversion`).then(res => {
+                    //       version = res.data
+                    //       if(version != this.logtimeInfo.appVersion) {
+                    //             this.$store.commit('CHANGE_APP_VERSION', version)
+                    //             this.$store.commit('CHANGE_USER_INFO', {})
+                    //             this.$store.commit('CHANGE_USER_LOGGING', false)
+                    //             this.$store.commit('CHANGE_SERVERDATETTIME', '')
+                    //             if(this.$route.name != 'login') {
+                    //                 this.$router.push('/')
+                    //             }
+                    //       }
+                    //  })
                 },
                 zeroPad(num, numZeros) {
                     let n = Math.abs(num)
@@ -141,6 +146,9 @@ const plugins = {
                     }
 
                     return leaveDesc.toUpperCase()
+                },
+                getHolidays() {
+                    return this.axios.get(`${this.api}/holidays`)
                 }
             }
         })

@@ -16,6 +16,11 @@ const routes = [
     name: 'dashboard',
     component: () => import(/* webpackChunkName: "about" */ '../views/dashboard')
   },
+  {
+    path: `*`,
+    name: 'error',
+    component: () => import(/* webpackChunkName: "about" */ '../views/error')
+  }
 ]
 
 const router = new VueRouter({
@@ -25,10 +30,15 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if(to.path !== '/' && store.state.logtimeuserinfo.EmployeeCode == undefined) {
+  if(to.path !== '/' && store.state.logtimeInfo.userinfo.EmployeeCode == undefined) {
     next('/') // Goto Login page
-  } else if(to.path === '/' && store.state.logtimeuserinfo.EmployeeCode != undefined) { 
-    next(`/${md5('dashboard')}`)
+  } else if(to.path === '/' && store.state.logtimeInfo.userinfo.EmployeeCode != undefined) { 
+    // check if network is connected
+    if(store.state.logtimeInfo.isLogtimeConnect) {
+      next(`/${md5('dashboard')}`)
+    } else {
+      next('*')
+    }
   } else {
     next()
   }

@@ -75,7 +75,7 @@
                                         :items="filterLogtime"
                                         :loading="loading"
                                         :page.sync="page"
-                                        :items-per-page="9"
+                                        :items-per-page="8"
                                         loading-text=""
                                         @page-count="pageCount = $event"
                                         hide-default-footer
@@ -124,7 +124,7 @@
                                         class="mt-5"
                                         color="teal"
                                         :length="pageCount"
-                                        :total-visible="10"
+                                        :total-visible="6"
                                     ></v-pagination>
                                 </v-container>
                                 <v-container v-else>
@@ -171,6 +171,7 @@ export default {
             dtLogtime: '',
             imgClock: '',
             strGreetings: '',
+            userInfo: {},
             logtimeData: [],
             headers: [
                 {text: 'Log Date', value: 'LogDateTime'},
@@ -193,10 +194,11 @@ export default {
     },
     created() {
         window.addEventListener("beforeunload", this.browserTabEvents)
-        this.datenow = this.serverDateTime
+        this.userInfo = this.logtimeInfo.userinfo
+        this.datenow = this.logtimeInfo.serverDateTime
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
-        if(this.moment.utc(this.logtimeuserinfo.LogDateTime).format('YYYY-MM-DD') != this.moment.utc(this.datenow).format('YYYY-MM-DD')) {
-            this.updateLogtimeData(this.logtimeuserinfo)
+        if(this.moment.utc(this.userInfo.LogDateTime).format('YYYY-MM-DD') != this.moment.utc(this.datenow).format('YYYY-MM-DD')) {
+            this.updateLogtimeData(this.userInfo)
         } else {
             this.loadLogtime()
         }
@@ -207,13 +209,13 @@ export default {
     computed: {
         filterLogtime() {
             return this.logtimeData.filter(rec => {
-                return rec.EmployeeCode.includes(this.logtimeuserinfo.EmployeeCode || '')
+                return rec.EmployeeCode.includes(this.userInfo.EmployeeCode || '')
             })
         },
         filterTotalPresent() {
             return this.logtimeData.filter(rec => {
                 return (
-                    rec.EmployeeCode.includes(this.logtimeuserinfo.EmployeeCode) &&
+                    rec.EmployeeCode.includes(this.userInfo.EmployeeCode) &&
                     rec.TimeIn != null 
                 )
             })
@@ -221,7 +223,7 @@ export default {
         filterTotalAbsent() {
             return this.logtimeData.filter(rec => {
                 return (
-                    rec.EmployeeCode.includes(this.logtimeuserinfo.EmployeeCode) &&
+                    rec.EmployeeCode.includes(this.userInfo.EmployeeCode) &&
                     rec.TimeIn == null &&
                     rec.OTCode == 'RD'
                 )
@@ -231,7 +233,8 @@ export default {
     mounted() {
         setInterval(() => {
             this.datenow = this.moment.utc(this.datenow).add(1, 'seconds')
-            this.$store.commit('CHANGE_SERVERDATETTIME', this.datenow)
+            this.logtimeDateTime = this.datenow
+            // this.$store.commit('CHANGE_SERVERDATETTIME', this.datenow)
         }, 1000);
     },
     methods: {
@@ -246,8 +249,8 @@ export default {
                 procedureName: 'Logtime.dbo.ProcGetLogTimeData',
                 values: [
                     `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
-                    this.logtimeuserinfo.ShortName,
-                    this.logtimeuserinfo.DepartmentName,
+                    this.userInfo.ShortName,
+                    this.userInfo.DepartmentName,
                     null,
                     null,
                     0
@@ -271,14 +274,14 @@ export default {
         userLoggedOut() {
             this.swal.fire(this.logOutOptions).then(result => {
                 if(result.isConfirmed) {
-                    this.updateLogtimeData(this.logtimeuserinfo)
+                    this.updateLogtimeData(this.logtimeInfo.userinfo)
                 }
             })
         },
         updateLogtimeData(value) {
             //Compute duration
             let timeInVal = this.moment.utc(value.TimeIn)
-            let timeOutVal  = this.moment.utc(this.serverDateTime)
+            let timeOutVal  = this.moment.utc(this.logtimeDateTime)
             let timeLogOut = timeOutVal.format('YYYY-MM-DD HH:mm:ss')
             if(this.moment(value.LogDateTime).format('YYYY-MM-DD') != timeOutVal.format('YYYY-MM-DD')) {
                 timeLogOut = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.moment(value.EndTime).format('HH:mm:ss')}`
@@ -356,7 +359,7 @@ export default {
             this.totalHours = 0
             val.forEach(rec => {
                 rec.LogDateTime = this.moment(rec.LogDateTime).format('YYYY-MM-DD')
-                if(rec.EmployeeCode == this.logtimeuserinfo.EmployeeCode) {
+                if(rec.EmployeeCode == this.userInfo.EmployeeCode) {
                     this.totalHours += rec.NoHrs
                 }
                 rec.TimeIn = rec.TimeIn != null ? this.moment.utc(rec.TimeIn) : null
