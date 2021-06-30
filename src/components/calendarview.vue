@@ -22,12 +22,14 @@
                 color="teal"
                 :events="events"
                 @change="loadLogtime()"
-                @click:event="getCelendarEvent"
+                @click:event="getCalendarEvent"
             ></v-calendar>
             <v-menu v-model="showEvent" :nudge-width="150" :activator="selectedEvent" :close-on-content-click="false" offset-x>
                 <v-card>
-                    <v-toolbar :color="eventDetails.TimeIn ? 'rgb(0, 150, 136)' : 'rgb(255, 177, 193)'" dense dark flat>
+                    <v-toolbar :color="eventDetails.TIMEIN ? eventDetails.MANUALREM == '121' ? 'warning' : 'rgb(0, 150, 136)' : 'rgb(255, 177, 193)'" dense dark flat>
                         <v-toolbar-title class="overline">Details</v-toolbar-title>
+                        <v-spacer></v-spacer>
+                        <v-icon>{{ eventDetails.MANUALREM == '121' ? 'mdi-home-account' : 'mdi-clock-outline'}}</v-icon>
                     </v-toolbar>
                     <v-list dense>
                         <v-list-item dense>
@@ -35,7 +37,7 @@
                                 <v-list-item-subtitle>LogDate:</v-list-item-subtitle>
                             </v-list-item-content>
                             <v-list-item-action>
-                                <v-list-item-action-text class="subtitle-2 font-weight-bold">{{ moment(eventDetails.LogDateTime).format('YYYY-MM-DD') }} </v-list-item-action-text>
+                                <v-list-item-action-text class="subtitle-2 font-weight-bold">{{ moment(eventDetails.LOGDATE).format('YYYY-MM-DD') }} </v-list-item-action-text>
                             </v-list-item-action>
                         </v-list-item>
                         <v-list-item dense>
@@ -44,7 +46,7 @@
                             </v-list-item-content>
                             <v-list-item-action>
                                 <v-list-item-action-text class="subtitle-2 font-weight-bold">
-                                    {{ eventDetails.TimeIn ? moment.utc(eventDetails.TimeIn).format('hh:mm:ss a') : 'N/A' }} 
+                                    {{ eventDetails.TIMEIN ? eventDetails.TIMEIN : 'N/A' }} 
                                 </v-list-item-action-text>
                             </v-list-item-action>
                         </v-list-item>
@@ -54,7 +56,7 @@
                             </v-list-item-content>
                             <v-list-item-action>
                                 <v-list-item-action-text class="subtitle-2 font-weight-bold">
-                                    {{ eventDetails.TimeOut ? moment.utc(eventDetails.TimeOut).format('hh:mm:ss a') : 'N/A' }} 
+                                    {{ eventDetails.TIMEOUT ? eventDetails.TIMEOUT : 'N/A' }} 
                                 </v-list-item-action-text>
                             </v-list-item-action>
                         </v-list-item>
@@ -85,6 +87,7 @@ export default {
             userInfo: {},
             events: [],
             holidays: [],
+            dateRange: [],
             logtimeData: [],
             eventDetails: [],
         }
@@ -92,6 +95,10 @@ export default {
     created() {
         this.userInfo = this.logtimeInfo.userinfo
         this.value = this.moment(this.logtimeInfo.serverDateTime).format('YYYY-MM-DD')
+        this.dateRange = [
+            {text: 'Date From', value: this.moment.utc(this.value).startOf('month').format('YYYY-MM-DD'), dialog: false},
+            {text: 'Date To', value: this.moment.utc(this.value).endOf('month').format('YYYY-MM-DD'), dialog: false}
+        ]
     },
     mounted() {
         this.$refs.calendar.checkChange()
@@ -100,24 +107,32 @@ export default {
     computed: {
         filterLogtime() {
             return this.logtimeData.filter(rec => {
-                return rec.EmployeeCode.includes(this.userInfo.EmployeeCode || '')
+                return rec.EMPLCODE.includes(this.userInfo.EMPLCODE)
             })
         }
     },
     methods: {
         nextMonth() {
             this.value = this.moment(this.value).add(1, 'months').format('YYYY-MM-DD')
+            this.dateRange = [
+                {text: 'Date From', value: this.moment.utc(this.value).startOf('month').format('YYYY-MM-DD'), dialog: false},
+                {text: 'Date To', value: this.moment.utc(this.value).endOf('month').format('YYYY-MM-DD'), dialog: false}
+            ]
             this.loadLogtime()
         },
         prevMonth() {
             this.value = this.moment(this.value).subtract(1, 'months').format('YYYY-MM-DD')
+            this.dateRange = [
+                {text: 'Date From', value: this.moment.utc(this.value).startOf('month').format('YYYY-MM-DD'), dialog: false},
+                {text: 'Date To', value: this.moment.utc(this.value).endOf('month').format('YYYY-MM-DD'), dialog: false}
+            ]
             this.loadLogtime()
         },
         changeView() {
             this.calendarView = false
             this.$emit('update:IsCalendarView', this.calendarView)
         },
-        getCelendarEvent({ nativeEvent, event }) {
+        getCalendarEvent({ nativeEvent, event }) {
             if(event.value) {
                 const open = () => {
                     this.eventDetails = event.value
@@ -136,23 +151,20 @@ export default {
             }
         },
         getEventDetails() {
-            return this.filterLogtime.filter(rec => this.moment(rec.LogDateTime).format('YYYY-MM-DD') == this.value)
+            return this.filterLogtime.filter(rec => this.moment(rec.LOGDATE).format('YYYY-MM-DD') == this.value)
         },
         loadLogtime() {
             this.loading = true
             this.logtimeData = []
             let body = {
-                procedureName: 'Logtime.dbo.ProcGetLogTimeData',
-                values: [
-                    `LT${this.moment(this.value).format('MMYYYY')}`,
-                    this.userInfo.ShortName,
-                    this.userInfo.DepartmentName,
-                    null,
-                    null,
-                    0
-                ]
+                server: process.env.NODE_ENV ==='production' ? `HRIS${this.userInfo.SHORTNAME}` : `HRIS${this.userInfo.SHORTNAME.toLowerCase()}test`,
+                logdate: this.getUnionLogtime(this.dateRange),
+                company: this.userInfo.SHORTNAME,
+                emplcode: this.userInfo.EMPLCODE
             }
-            this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
+            
+            // console.log(body);
+            this.getUserLogtimeData(body).then(res => {
                 if(Array.isArray(res.data)) {
                     this.logtimeData = res.data
                     this.getEvents()
@@ -160,14 +172,31 @@ export default {
                 this.loading = false
             })
         },
+        getUnionLogtime(dateRange) {
+            let strUnion = ''
+            let dtCounter = this.moment.utc(dateRange[0].value)
+            let intYear = this.moment(dateRange[0]).format('YYYY')
+            let dtFrom = parseInt(this.moment(dateRange[0].value).format("DD"))
+            let dtTo = parseInt(this.moment(dateRange[1].value).format("DD"))
+            if(dtFrom != dtTo) {
+                while(dtFrom <= dtTo) {
+                    strUnion += `SELECT * FROM LOGTIME.T01${this.moment.utc(dtCounter).format('MMDDYY')} UNION ALL `
+                    dtCounter = this.moment.utc(dtCounter).add(1, 'days')
+                    dtFrom++ 
+                }
+                return `(${strUnion.substring(0, strUnion.lastIndexOf('UNION ALL'))})`                
+            } else {
+                return `${dtFrom > 9 ? dtFrom : `0${dtFrom}`}${intYear}`
+            }
+        },
         getEvents() {
             this.events = []
-            this.filterLogtime.forEach(rec => {
+            this.logtimeData.forEach(rec => {
                 this.events.push({
-                    name: rec.TimeIn ? 'PRESENT' : this.getLeaveDesc(rec.Leave, rec.OTCode, rec.TimeIn),
-                    start: this.moment(rec.LogDateTime).format('YYYY-MM-DD'),
-                    end: this.moment(rec.LogDateTime).format('YYYY-MM-DD'),
-                    color: rec.TimeIn ? 'rgb(0, 150, 136, 0.8)' : 'rgb(255, 177, 193)',
+                    name: rec.TIMEIN ? rec.MANUALREM == '121' ? rec.ISWFH.toUpperCase() : 'PRESENT' : this.getLeaveDesc(rec.LEAVE, rec.OTCODE, rec.TIMEIN),
+                    start: this.moment(rec.LOGDATE).format('YYYY-MM-DD'),
+                    end: this.moment(rec.LOGDATE).format('YYYY-MM-DD'),
+                    color: rec.TIMEIN ? rec.MANUALREM == '121' ? 'warning' : 'rgb(0, 150, 136, 0.8)' : 'rgb(255, 177, 193)',
                     value: rec
                 })
             })

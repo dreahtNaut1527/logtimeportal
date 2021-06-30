@@ -30,9 +30,9 @@ const router = new VueRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  if(to.path !== '/' && store.state.logtimeInfo.userinfo.EmployeeCode == undefined) {
+  if(to.path !== '/' && store.state.logtimeInfo.userinfo.EMPLCODE == undefined) {
     next('/') // Goto Login page
-  } else if(to.path === '/' && store.state.logtimeInfo.userinfo.EmployeeCode != undefined) { 
+  } else if(to.path === '/' && store.state.logtimeInfo.userinfo.EMPLCODE != undefined) { 
     // check if network is connected
     if(store.state.logtimeInfo.isLogtimeConnect) {
       next(`/${md5('dashboard')}`)

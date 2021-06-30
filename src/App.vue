@@ -1,8 +1,8 @@
 <template>
     <v-app id="inspire">
-        <navdrawer v-if="logtimeInfo.userinfo.EmployeeCode != undefined" />
+        <navdrawer v-if="logtimeInfo.userinfo.EMPLCODE != undefined" />
         <router-view />
-        <navfooter v-if="logtimeInfo.userinfo.EmployeeCode != undefined" />
+        <navfooter v-if="logtimeInfo.userinfo.EMPLCODE != undefined" />
     </v-app>
 </template>
 

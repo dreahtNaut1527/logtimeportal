@@ -39,6 +39,9 @@ const plugins = {
                         store.commit('CHANGE_SERVERDATETTIME', serverData.SERVERDATETIME)
                     })
                 },
+                getUserLogtimeData(body) {
+                    return this.axios.post(`${this.asd_sql}/ora_getlogtime.php`, body)
+                },
                 calculateDates(date1, date2) {  
                     let validDate1 = this.moment(date1, 'YYYY-MM-DD HH:mm:ss').isValid()
                     let validDate2 = this.moment(date2, 'YYYY-MM-DD HH:mm:ss').isValid()
