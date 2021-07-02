@@ -89,6 +89,7 @@ export default {
             loading: false,
             username: '',
             password: '',
+            serverName: '',
             employeeDetails: {}
         }
     },
@@ -109,9 +110,10 @@ export default {
                 this.employeeDetails = res.data[0]
                 // check if record exists
                 if(this.employeeDetails != undefined) {
+                    this.serverName = `HRIS${this.employeeDetails.ShortName.toLowerCase()}test`
                     if(this.md5(this.password) == this.employeeDetails.Password) {
                         body = {
-                            server: process.env.NODE_ENV ==='production' ? `HRIS${this.employeeDetails.ShortName}` : `HRIS${this.employeeDetails.ShortName.toLowerCase()}test`,
+                            server: this.serverName,
                             logdate: `LOGTIME.T01${this.moment.utc(this.logtimeInfo.serverDateTime).format('MMDDYY')}`,
                             company: this.employeeDetails.ShortName,
                             emplcode: this.employeeDetails.EmployeeCode
@@ -122,23 +124,24 @@ export default {
                                 this.alert = true
                                 this.alertText = `You are currently on ${oraLogtime.LEAVEDESCRIPTION} leave`
                             } else {
-                                if(oraLogtime.MANUALREM != '121') {
+                                if(oraLogtime.TIMEIN && oraLogtime.MANUALREM != '121') {
                                     this.alert = true
                                     this.alertText = `Cannot use the system while you are in the office.`
                                 } else {
                                     this.updateORALogtime(oraLogtime)
                                 }
                             }
-
                             this.loading = false
                         })
                     } else {
                         this.alert = true
                         this.alertText = 'Username and/or Password do not match. Please try again'
+                        this.loading = false
                     }
                 } else {
                     this.alert = true
                     this.alertText = 'Account does not exists. Please contact your administrator'
+                    this.loading = false
                 }
 
                 // if(this.employeeDetails != undefined) {
@@ -268,7 +271,7 @@ export default {
             let dtToday = this.moment.utc(this.logtimeInfo.serverDateTime)
             let cutOffValues = this.getCutOffValues(dtToday.format('YYYY-MM-DD'), value.EMPLCODE)
             let body = {
-                server: process.env.NODE_ENV ==='production' ? `HRIS${value.SHORTNAME}` : `HRIS${value.SHORTNAME.toLowerCase()}test`,
+                server: this.serverName,
                 procedureName: 'HRIS.PROCUPDATELOGTIME',
                 values: [
                     value.EMPLCODE, 
@@ -296,7 +299,7 @@ export default {
                 this.axios.post(`${this.asd_sql}/ora_procedure.php`, {data: JSON.stringify(body)}).then(res => {
                     if(res.data[0] == 1) {
                         body = {
-                            server: process.env.NODE_ENV ==='production' ? `HRIS${value.SHORTNAME}` : `HRIS${value.SHORTNAME.toLowerCase()}test`,
+                            server: this.serverName,
                             logdate: `LOGTIME.T01${this.moment.utc(value.LOGDATE).format('MMDDYY')}`,
                             company: value.SHORTNAME,
                             emplcode: value.EMPLCODE
@@ -313,7 +316,7 @@ export default {
                 })
             } else {
                 body = {
-                    server: process.env.NODE_ENV ==='production' ? `HRIS${value.SHORTNAME}` : `HRIS${value.SHORTNAME.toLowerCase()}test`,
+                    server: this.serverName,
                     logdate: `LOGTIME.T01${this.moment.utc(value.LOGDATE).format('MMDDYY')}`,
                     company: value.SHORTNAME,
                     emplcode: value.EMPLCODE

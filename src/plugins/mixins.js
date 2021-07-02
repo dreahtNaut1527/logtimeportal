@@ -12,7 +12,7 @@ const plugins = {
                     logtimeDateTime: '',
                     server: process.env.VUE_APP_SERVER,
                     asd_sql: process.env.VUE_APP_ASD_SQL,
-                    photo: process.env.VUE_APP_PHOTO
+                    photo: process.env.VUE_APP_PHOTO,
                 }
             },
             created() {
@@ -41,6 +41,14 @@ const plugins = {
                 },
                 getUserLogtimeData(body) {
                     return this.axios.post(`${this.asd_sql}/ora_getlogtime.php`, body)
+                },
+                getTableExists(server, dbname, tablename) {
+                    let body = {
+                        server: server,
+                        dbname: dbname,
+                        tablename: tablename
+                    }
+                    return this.axios.post(`${this.asd_sql}/ora_checktableexists.php`, body)
                 },
                 calculateDates(date1, date2) {  
                     let validDate1 = this.moment(date1, 'YYYY-MM-DD HH:mm:ss').isValid()

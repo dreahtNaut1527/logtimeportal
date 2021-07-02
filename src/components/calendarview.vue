@@ -21,7 +21,7 @@
                 v-model="value"
                 color="teal"
                 :events="events"
-                @change="loadLogtime()"
+                @change="getUnionLogtime(dateRange)"
                 @click:event="getCalendarEvent"
             ></v-calendar>
             <v-menu v-model="showEvent" :nudge-width="150" :activator="selectedEvent" :close-on-content-click="false" offset-x>
@@ -79,11 +79,12 @@ export default {
     props: ['IsCalendarView'],
     data() {
         return {
+            value: null,
             selectedEvent: null,
             loading: false,
             showEvent: false,
             calendarView: false,
-            value: null,
+            serverName: '',
             userInfo: {},
             events: [],
             holidays: [],
@@ -94,6 +95,7 @@ export default {
     },
     created() {
         this.userInfo = this.logtimeInfo.userinfo
+        this.serverName = `HRIS${this.userInfo.SHORTNAME.toLowerCase()}test`
         this.value = this.moment(this.logtimeInfo.serverDateTime).format('YYYY-MM-DD')
         this.dateRange = [
             {text: 'Date From', value: this.moment.utc(this.value).startOf('month').format('YYYY-MM-DD'), dialog: false},
@@ -118,7 +120,7 @@ export default {
                 {text: 'Date From', value: this.moment.utc(this.value).startOf('month').format('YYYY-MM-DD'), dialog: false},
                 {text: 'Date To', value: this.moment.utc(this.value).endOf('month').format('YYYY-MM-DD'), dialog: false}
             ]
-            this.loadLogtime()
+            this.getUnionLogtime(this.dateRange)
         },
         prevMonth() {
             this.value = this.moment(this.value).subtract(1, 'months').format('YYYY-MM-DD')
@@ -126,7 +128,7 @@ export default {
                 {text: 'Date From', value: this.moment.utc(this.value).startOf('month').format('YYYY-MM-DD'), dialog: false},
                 {text: 'Date To', value: this.moment.utc(this.value).endOf('month').format('YYYY-MM-DD'), dialog: false}
             ]
-            this.loadLogtime()
+            this.getUnionLogtime(this.dateRange)
         },
         changeView() {
             this.calendarView = false
@@ -153,17 +155,14 @@ export default {
         getEventDetails() {
             return this.filterLogtime.filter(rec => this.moment(rec.LOGDATE).format('YYYY-MM-DD') == this.value)
         },
-        loadLogtime() {
-            this.loading = true
-            this.logtimeData = []
+        loadLogtime(tableNames) {
             let body = {
-                server: process.env.NODE_ENV ==='production' ? `HRIS${this.userInfo.SHORTNAME}` : `HRIS${this.userInfo.SHORTNAME.toLowerCase()}test`,
-                logdate: this.getUnionLogtime(this.dateRange),
+                server: this.serverName,
+                logdate: tableNames,
                 company: this.userInfo.SHORTNAME,
                 emplcode: this.userInfo.EMPLCODE
             }
             
-            // console.log(body);
             this.getUserLogtimeData(body).then(res => {
                 if(Array.isArray(res.data)) {
                     this.logtimeData = res.data
@@ -173,20 +172,37 @@ export default {
             })
         },
         getUnionLogtime(dateRange) {
+            this.loading = true
+            this.logtimeData = []
             let strUnion = ''
-            let dtCounter = this.moment.utc(dateRange[0].value)
+            let tableNames = []
+            let dtCounter = this.moment.utc(dateRange[0].value).format('YYYY-MM-DD')
             let intYear = this.moment(dateRange[0]).format('YYYY')
-            let dtFrom = parseInt(this.moment(dateRange[0].value).format("DD"))
-            let dtTo = parseInt(this.moment(dateRange[1].value).format("DD"))
+            let dtFrom = parseInt(this.moment.utc(dateRange[0].value).format("DD"))
+            let dtTo = parseInt(this.moment.utc(dateRange[0].value).endOf('month').format("DD"))
             if(dtFrom != dtTo) {
+
+                // Get all Dates from daterange
                 while(dtFrom <= dtTo) {
-                    strUnion += `SELECT * FROM LOGTIME.T01${this.moment.utc(dtCounter).format('MMDDYY')} UNION ALL `
-                    dtCounter = this.moment.utc(dtCounter).add(1, 'days')
+                    tableNames.push(dtCounter)
                     dtFrom++ 
+                    dtCounter = this.moment.utc(dtCounter).add(1, 'days').format('YYYY-MM-DD')
                 }
-                return `(${strUnion.substring(0, strUnion.lastIndexOf('UNION ALL'))})`                
+                
+                tableNames.forEach((rec, index, array) => {
+                    this.getTableExists(this.serverName, 'LOGTIME', `T01${this.moment.utc(rec).format('MMDDYY')}`).then(res => {
+                        if(res.data[0].TOTAL == 1) {
+                            strUnion += `SELECT * FROM LOGTIME.T01${this.moment.utc(rec).format('MMDDYY')} UNION ALL `
+                        }
+
+                        if(index == array.length - 1) {
+                            this.loadLogtime(`(${strUnion.substring(0, strUnion.lastIndexOf('UNION ALL'))})`)
+                        }
+                    })
+                })
+             
             } else {
-                return `${dtFrom > 9 ? dtFrom : `0${dtFrom}`}${intYear}`
+                this.loadLogtime( `${dtFrom > 9 ? dtFrom : `0${dtFrom}`}${intYear}`)
             }
         },
         getEvents() {

@@ -106,9 +106,9 @@
                                                 </td>
                                                 <td v-if="props.item.TIMEIN">{{!props.item.TIMEIN ? '' : props.item.TIMEIN}}</td>
                                                 <td v-if="props.item.TIMEIN">{{!props.item.TIMEOUT ? '' : props.item.TIMEOUT}}</td>
-                                                <td v-if="props.item.TIMEIN" class="text-center">{{!props.item.TIMEIN ? "" : props.item.NOHRS}}</td>
-                                                <td v-if="props.item.TIMEIN" class="text-center">{{!props.item.TIMEIN ? "" : props.item.TARDINESS}}</td>
-                                                <td v-if="props.item.TIMEIN" class="text-center">{{!props.item.TIMEIN ? "" : props.item.UNDERTIME}}</td>
+                                                <td v-if="props.item.TIMEIN" class="text-center">{{!props.item.TIMEIN ? "" : parseFloat(props.item.NOHRS)}}</td>
+                                                <td v-if="props.item.TIMEIN" class="text-center">{{!props.item.TIMEIN ? "" : parseFloat(props.item.TARDINESS)}}</td>
+                                                <td v-if="props.item.TIMEIN" class="text-center">{{!props.item.TIMEIN ? "" : parseFloat(props.item.UNDERTIME)}}</td>
                                                 <td v-if="props.item.TIMEIN">
                                                     <v-chip v-if="props.item.TIMEIN" :color="props.item.MANUALREM == '121' ? 'warning' : 'success'" dark>
                                                         {{ props.item.ISWFH ? props.item.ISWFH  : 'Office'}}
@@ -196,7 +196,7 @@ export default {
         window.addEventListener("beforeunload", this.browserTabEvents)
         this.userInfo = this.logtimeInfo.userinfo
         this.datenow = this.logtimeInfo.serverDateTime
-        this.serverName = process.env.NODE_ENV ==='production' ? `HRIS${this.userInfo.SHORTNAME}` : `HRIS${this.userInfo.SHORTNAME.toLowerCase()}test`
+        this.serverName = `HRIS${this.userInfo.SHORTNAME.toLowerCase()}test`
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
         this.dateRange = [
             {text: 'Date From', value: this.moment.utc(this.datenow).startOf('month').format('YYYY-MM-DD'), dialog: false},
@@ -205,7 +205,7 @@ export default {
         if(this.moment.utc(this.userInfo.LOGDATE).format('YYYY-MM-DD') != this.moment.utc(this.datenow).format('YYYY-MM-DD')) {
             this.userLoggedOut()
         } else {
-            this.loadLogtime()
+            this.getUnionLogtime(this.dateRange)
         }
     },
     beforeDestroy() {
@@ -252,12 +252,10 @@ export default {
             events.preventDefault()
             events.returnValue = ""
         },
-        loadLogtime() {
-            this.loading = true
-            this.logtimeData = []
+        loadLogtime(tableNames) {
             let body = {
                 server: this.serverName,
-                logdate: this.getUnionLogtime(this.dateRange),
+                logdate: tableNames,
                 company: this.userInfo.SHORTNAME,
                 emplcode: this.userInfo.EMPLCODE
             }
@@ -287,20 +285,37 @@ export default {
             // })
         },
         getUnionLogtime(dateRange) {
+            this.loading = true
+            this.logtimeData = []
             let strUnion = ''
-            let dtCounter = this.moment.utc(dateRange[0].value)
+            let tableNames = []
+            let dtCounter = this.moment.utc(dateRange[0].value).format('YYYY-MM-DD')
             let intYear = this.moment(dateRange[0]).format('YYYY')
-            let dtFrom = parseInt(this.moment(dateRange[0].value).format("DD"))
-            let dtTo = parseInt(this.moment(dateRange[1].value).format("DD"))
+            let dtFrom = parseInt(this.moment.utc(dateRange[0].value).format("DD"))
+            let dtTo = parseInt(this.moment.utc(dateRange[0].value).endOf('month').format("DD"))
             if(dtFrom != dtTo) {
+
+                // Get all Dates from daterange
                 while(dtFrom <= dtTo) {
-                    strUnion += `SELECT * FROM LOGTIME.T01${this.moment.utc(dtCounter).format('MMDDYY')} UNION ALL `
-                    dtCounter = this.moment.utc(dtCounter).add(1, 'days')
+                    tableNames.push(dtCounter)
                     dtFrom++ 
+                    dtCounter = this.moment.utc(dtCounter).add(1, 'days').format('YYYY-MM-DD')
                 }
-                return `(${strUnion.substring(0, strUnion.lastIndexOf('UNION ALL'))})`                
+                
+                tableNames.forEach((rec, index, array) => {
+                    this.getTableExists(this.serverName, 'LOGTIME', `T01${this.moment.utc(rec).format('MMDDYY')}`).then(res => {
+                        if(res.data[0].TOTAL == 1) {
+                            strUnion += `SELECT * FROM LOGTIME.T01${this.moment.utc(rec).format('MMDDYY')} UNION ALL `
+                        }
+
+                        if(index == array.length - 1) {
+                            this.loadLogtime(`(${strUnion.substring(0, strUnion.lastIndexOf('UNION ALL'))})`)
+                        }
+                    })
+                })
+             
             } else {
-                return `${dtFrom > 9 ? dtFrom : `0${dtFrom}`}${intYear}`
+                this.loadLogtime( `${dtFrom > 9 ? dtFrom : `0${dtFrom}`}${intYear}`)
             }
         },
         nextMonth() {
@@ -309,7 +324,7 @@ export default {
                 {text: 'Date From', value: this.moment.utc(this.dtLogtime).startOf('month').format('YYYY-MM-DD'), dialog: false},
                 {text: 'Date To', value: this.moment.utc(this.dtLogtime).endOf('month').format('YYYY-MM-DD'), dialog: false}
             ]
-            this.loadLogtime()
+            this.getUnionLogtime(this.dateRange)
         },
         prevMonth() {
             this.dtLogtime = this.moment(this.dtLogtime).subtract(1, 'months')
@@ -317,7 +332,7 @@ export default {
                 {text: 'Date From', value: this.moment.utc(this.dtLogtime).startOf('month').format('YYYY-MM-DD'), dialog: false},
                 {text: 'Date To', value: this.moment.utc(this.dtLogtime).endOf('month').format('YYYY-MM-DD'), dialog: false}
             ]
-            this.loadLogtime()
+            this.getUnionLogtime(this.dateRange)
         },
         userLoggedOut() {
             this.swal.fire(this.logOutOptions).then(result => {
@@ -391,6 +406,8 @@ export default {
         updateORALogtime(value) {
             let dtToday = this.moment.utc(this.datenow)
             let cutOffValues = this.getCutOffValues(dtToday.format('YYYY-MM-DD'), value.EMPLCODE)
+            let totalHours = this.computeTotalHours(value, `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
+            let totalUndertime = this.computeUndertime(value, `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
             let body = {
                 server: this.serverName,
                 procedureName: 'HRIS.PROCUPDATELOGTIME',
@@ -398,9 +415,9 @@ export default {
                     value.EMPLCODE, 
                     dtToday.format('YYYY-MM-DD'),
                     `${dtToday.format('YYYY-MM-DD')} ${value.TIMEIN}`, // TIMEIN,
-                    `${dtToday.format('YYYY-MM-DD')} ${dtToday.format('HH:mm:ss')}`, // TIMEOUT
-                    this.computeTotalHours(value, `${dtToday.format('YYYY-MM-DD')} ${dtToday.format('HH:mm:ss')}`), // NOHRS
-                    this.computeUndertime(value, `${dtToday.format('YYYY-MM-DD')} ${dtToday.format('HH:mm:ss')}`), // UNDERTIME
+                    `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`, // TIMEOUT
+                    (totalHours - value.TARDINESS).toFixed(4), // NOHRS
+                    totalUndertime, // UNDERTIME
                     value.TARDINESS,
                     0,
                     1, 
@@ -415,10 +432,11 @@ export default {
                     dtToday.format('YYYY-MM-DD')
                 ]
             }
-            if(!value.TIMEOUT) {
-            // console.log(body)
+            if(!value.TIMEOUT && value.MANUALREM == '121') {
+                // console.log(body)
                 this.axios.post(`${this.asd_sql}/ora_procedure.php`, {data: JSON.stringify(body)}).then(res => {
                     if(res.data == '1') {
+                        this.saveOriginalLogtimeDetails(value, `${dtToday.format('YYYY-MM-DD HH:mm:ss')}`)
                         this.$store.commit('CHANGE_USER_INFO', {})
                         this.$store.commit('CHANGE_USER_LOGGING', false)
                         this.$store.commit('CHANGE_SERVERDATETTIME', '')
@@ -497,6 +515,28 @@ export default {
                 return 0
             }
         },
+        saveOriginalLogtimeDetails(rec, timeout) {
+            let dtToday = this.moment.utc(this.datenow)
+            let totalHours = this.computeTotalHours(rec, `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(rec.ENDTIME).format('HH:mm:ss')}`)
+            let totalUndertime = this.computeUndertime(rec, `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(rec.ENDTIME).format('HH:mm:ss')}`)
+            let body = {
+                procedureName: 'Logtime.dbo.ProcLogtimeManualEncode',
+                values:  [
+                    rec.SHORTNAME,
+                    rec.LOGDATE, 
+                    rec.EMPLCODE,
+                    `${dtToday.format('YYYY-MM-DD')} ${rec.TIMEIN}`, 
+                    timeout,
+                    (totalHours - rec.TARDINESS).toFixed(4), // NOHRS
+                    totalUndertime,
+                    rec.TARDINESS,
+                    rec.OVERTIME,
+                    this.logtimeInfo.userinfo.EMPLCODE,
+                    1   
+                ]
+            }
+            this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
+        }
     },
     watch: {
         datenow() {
