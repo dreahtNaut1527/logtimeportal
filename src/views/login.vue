@@ -60,6 +60,14 @@
                                         ></v-text-field>
                                     </v-form>
                                     <v-card-actions class="ma-0 pa-0">
+                                        <v-tooltip bottom>
+                                            <template v-slot:activator="{ on, attrs }">
+                                                <v-btn v-bind="attrs" v-on="on" @click="goToManual()" icon>
+                                                    <v-icon>mdi-help-circle-outline</v-icon>
+                                                </v-btn>
+                                            </template>
+                                            <span>Help</span>
+                                        </v-tooltip>
                                         <v-spacer></v-spacer>
                                         <v-btn class="px-7" @click="userLoggedIn()" color="teal darken-1" dark >Login</v-btn>
                                     </v-card-actions>
@@ -99,6 +107,9 @@ export default {
         this.$store.commit('CHANGE_SERVERDATETTIME', '')
     },
     methods: {
+        goToManual() {
+            window.open('http://10.169.141.8:5050/JaeAnn/logtimeportal_web/-/wikis/Manual', '_blank')
+        },
         userLoggedIn() { 
             this.loading = true
             let oraLogtime = {}
@@ -110,7 +121,7 @@ export default {
                 this.employeeDetails = res.data[0]
                 // check if record exists
                 if(this.employeeDetails != undefined) {
-                    this.serverName = `HRIS${this.employeeDetails.ShortName.toLowerCase()}test`
+                    this.serverName = `HRIS${this.employeeDetails.ShortName.toLowerCase()}` // `HRIS${this.employeeDetails.ShortName.toLowerCase()}test`
                     if(this.md5(this.password) == this.employeeDetails.Password) {
                         body = {
                             server: this.serverName,

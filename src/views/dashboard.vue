@@ -145,7 +145,7 @@
                             </v-container>
                         </v-sheet>
                         <v-card-actions class="px-7">
-                            <v-btn class="font-weight-bold my-3 py-9 text-h5" @click="userLoggedOut()" color="teal darken-1" block dark>Log-out</v-btn>
+                            <v-btn class="font-weight-bold my-3 py-9 text-h5" @click="userLoggedOut(true)" color="teal darken-1" block dark>Log-out</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-col>
@@ -196,14 +196,14 @@ export default {
         window.addEventListener("beforeunload", this.browserTabEvents)
         this.userInfo = this.logtimeInfo.userinfo
         this.datenow = this.logtimeInfo.serverDateTime
-        this.serverName = `HRIS${this.userInfo.SHORTNAME.toLowerCase()}test`
+        this.serverName = `HRIS${this.userInfo.SHORTNAME.toLowerCase()}` //`HRIS${this.userInfo.SHORTNAME.toLowerCase()}test`
         this.dtLogtime = this.moment().format('YYYY-MM-DD')
         this.dateRange = [
             {text: 'Date From', value: this.moment.utc(this.datenow).startOf('month').format('YYYY-MM-DD'), dialog: false},
             {text: 'Date To', value: this.moment.utc(this.datenow).endOf('month').format('YYYY-MM-DD'), dialog: false}
         ]
         if(this.moment.utc(this.userInfo.LOGDATE).format('YYYY-MM-DD') != this.moment.utc(this.datenow).format('YYYY-MM-DD')) {
-            this.userLoggedOut()
+            this.userLoggedOut(false)
         } else {
             this.getUnionLogtime(this.dateRange)
         }
@@ -334,12 +334,16 @@ export default {
             ]
             this.getUnionLogtime(this.dateRange)
         },
-        userLoggedOut() {
-            this.swal.fire(this.logOutOptions).then(result => {
-                if(result.isConfirmed) {
-                    this.updateORALogtime(this.userInfo)
-                }
-            })
+        userLoggedOut(option) {
+            if(option) {
+                this.swal.fire(this.logOutOptions).then(result => {
+                    if(result.isConfirmed) {
+                        this.updateORALogtime(this.userInfo)
+                    }
+                })
+            } else {
+                this.updateORALogtime(this.userInfo)
+            }
         },
         // updateLogtimeData(value) {
         //     //Compute duration
