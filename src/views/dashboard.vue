@@ -409,17 +409,17 @@ export default {
         // },
         updateORALogtime(value) {
             let dtToday = this.moment.utc(this.datenow)
-            let cutOffValues = this.getCutOffValues(dtToday.format('YYYY-MM-DD'), value.EMPLCODE)
-            let totalHours = this.computeTotalHours(value, `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
-            let totalUndertime = this.computeUndertime(value, `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
+            let cutOffValues = this.getCutOffValues(value.LOGDATE, value.EMPLCODE)
+            let totalHours = this.computeTotalHours(value, `${value.LOGDATE} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
+            let totalUndertime = this.computeUndertime(value, `${value.LOGDATE} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
             let body = {
                 server: this.serverName,
                 procedureName: 'HRIS.PROCUPDATELOGTIME',
                 values: [
                     value.EMPLCODE, 
-                    dtToday.format('YYYY-MM-DD'),
-                    `${dtToday.format('YYYY-MM-DD')} ${value.TIMEIN}`, // TIMEIN,
-                    `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`, // TIMEOUT
+                    value.LOGDATE,
+                    `${value.LOGDATE} ${value.TIMEIN}`, // TIMEIN,
+                    `${value.LOGDATE} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`, // TIMEOUT
                     (totalHours - value.TARDINESS).toFixed(4), // NOHRS
                     totalUndertime, // UNDERTIME
                     value.TARDINESS,

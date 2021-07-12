@@ -131,9 +131,9 @@ export default {
                         }
                         this.getUserLogtimeData(body).then(res => {
                             oraLogtime = res.data[0]
-                            if(oraLogtime.LEAVE == '1') {
+                            if(oraLogtime.LEAVE != '0') {
                                 this.alert = true
-                                this.alertText = `You are currently on ${oraLogtime.LEAVEDESCRIPTION} leave`
+                                this.alertText = `User currently on ${oraLogtime.LEAVEDESCRIPTION} leave`
                             } else {
                                 if(oraLogtime.TIMEIN && oraLogtime.MANUALREM != '121') {
                                     this.alert = true
@@ -154,25 +154,6 @@ export default {
                     this.alertText = 'Account does not exists. Please contact your administrator'
                     this.loading = false
                 }
-
-                // if(this.employeeDetails != undefined) {
-                //     // check leave
-                //     if(!this.checkLeave()) {
-                //         this.alert = true
-                //         this.alertText = `You are currently on ${this.employeeDetails.LeaveDesc} leave`
-                //     } else {
-                //         // check password
-                //         if(this.md5(this.password) == this.employeeDetails.Password) {
-                //             this.setTimeIn(this.employeeDetails)
-                //         } else {
-                //             this.alert = true
-                //             this.alertText = 'Username and/or Password do not match. Please try again'
-                //         }
-                //     }
-                // } else {
-                //     this.alert = true
-                //     this.alertText = 'Account does not exists. Please contact your administrator'
-                // }
             })
         },
         checkLeave() {
@@ -189,95 +170,6 @@ export default {
                 return true
             }
         },
-        // setTimeIn(value) {
-        //     this.getServerDateTime()
-        //     this.loading = true
-        //     let dtToday = null
-        //     let startShift = this.moment.utc(value.StartTime)
-        //     let endShift = this.moment.utc(value.EndTime)
-                
-        //     dtToday = this.moment.utc(this.logtimeInfo.serverDateTime)
-
-        //     // format shift for ORACLE
-        //     value.StartTime = `${dtToday.format('YYYY-MM-DD')} ${startShift.format('HH:mm:ss')}`
-        //     value.EndTime = `${dtToday.format('YYYY-MM-DD')} ${endShift.format('HH:mm:ss')}`
-            
-        //     // Check if employee already logged in 
-        //     if(value.TimeIn == null) {                
-        //         let body = {
-        //             procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-        //             values: [
-        //                 `LT${dtToday.format('MMYYYY')}`, 
-        //                 value.ShortName, 
-        //                 `${value.EmployeeCode}${dtToday.format('MMDDYYYY')}`,
-        //                 value.EmployeeCode, 
-        //                 dtToday.format('YYYY-MM-DD'), // LogDateTime
-        //                 dtToday.format('YYYY-MM-DD HH:mm:ss'), // Time In
-        //                 value.TimeOut, 
-        //                 value.NoHrs, 
-        //                 value.Undertime, 
-        //                 this.computeTardiness(value, dtToday.format('YYYY-MM-DD HH:mm:ss')), //value.Tardiness,
-        //                 value.Overtime, 
-        //                 value.ND, 
-        //                 value.Shift, 
-        //                 1, // SW1
-        //                 value.SW2,
-        //                 'PORTAL', //value.UserAcct, 
-        //                 value.UserAcctO, 
-        //                 dtToday.format('YYYY-MM-DD HH:mm:ss'), //value.UserTime, 
-        //                 value.UserTimeO, 
-        //                 '121', // Manual Rem
-        //                 value.ManualRemO, 
-        //                 value.ND1, 
-        //                 value.ND2, 
-        //                 value.NoHrs1, 
-        //                 value.PayCode,
-        //                 value.DayOff,
-        //                 value.OTCode,
-        //                 value.Meal,
-        //                 value.MealOCC,
-        //                 value.PostOT,
-        //                 value.Leave,
-        //                 value.TransIn,
-        //                 value.TransOut,
-        //                 value.DepartmentCode, 
-        //                 value.SectionCode,
-        //                 value.TeamCode,
-        //                 value.DesignationCode,
-        //                 1
-        //             ]
-        //         }
-        //         // console.log(body)
-        //         //Update Logtime Table
-        //         this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-        //         setTimeout(() => {
-        //             this.getLogTimeTableRecord()
-        //             this.loading = false
-        //         }, 2000)
-        //     } else {
-        //         this.getLogTimeTableRecord()
-        //     }
-        // },
-        // getLogTimeTableRecord() {
-        //     let tempEmployeeData = null
-        //     let body = {
-        //         procedureName: 'Logtime.dbo.ProcGetLogTimeDataUser',
-        //         values: [
-        //             this.moment().format('YYYY-MM-DD'),
-        //             this.username
-        //         ] 
-        //     }
-        //     this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
-        //         tempEmployeeData = res.data[0]
-        //         if(!tempEmployeeData.TimeOut && tempEmployeeData.LogType == 1) {
-        //             this.updateORALogtime(tempEmployeeData)
-        //         } else {
-        //             this.$store.commit('CHANGE_USER_INFO', tempEmployeeData)
-        //             this.$store.commit('CHANGE_USER_LOGGING', true)
-        //             this.$router.push(`/${this.md5('dashboard')}`)
-        //         }
-        //     })
-        // },
         updateORALogtime(value) {
             let dtToday = this.moment.utc(this.logtimeInfo.serverDateTime)
             let cutOffValues = this.getCutOffValues(dtToday.format('YYYY-MM-DD'), value.EMPLCODE)
