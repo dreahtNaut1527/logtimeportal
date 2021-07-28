@@ -85,18 +85,6 @@ const plugins = {
                                this.$router.push('/')
                            }
                      }
-                    //  this.axios.get(`${this.server}/appversion`).then(res => {
-                    //       version = res.data
-                    //       if(version != this.logtimeInfo.appVersion) {
-                    //             this.$store.commit('CHANGE_APP_VERSION', version)
-                    //             this.$store.commit('CHANGE_USER_INFO', {})
-                    //             this.$store.commit('CHANGE_USER_LOGGING', false)
-                    //             this.$store.commit('CHANGE_SERVERDATETTIME', '')
-                    //             if(this.$route.name != 'login') {
-                    //                 this.$router.push('/')
-                    //             }
-                    //       }
-                    //  })
                 },
                 zeroPad(num, numZeros) {
                     let n = Math.abs(num)

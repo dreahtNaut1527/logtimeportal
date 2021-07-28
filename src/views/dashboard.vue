@@ -145,7 +145,7 @@
                             </v-container>
                         </v-sheet>
                         <v-card-actions class="px-7">
-                            <v-btn class="font-weight-bold my-3 py-9 text-h5" @click="userLoggedOut(true)" color="teal darken-1" block dark>Log-out</v-btn>
+                            <v-btn class="font-weight-bold my-3 py-9 text-h5" @click="userLoggedOut(true)" :disabled="loading" color="teal darken-1" block dark>Log-out</v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-col>
@@ -266,23 +266,6 @@ export default {
                 }
                 this.loading = false
             })
-            // let body = {
-            //     procedureName: 'Logtime.dbo.ProcGetLogTimeData',
-            //     values: [
-            //         `LT${this.moment(this.dtLogtime).format('MMYYYY')}`,
-            //         this.userInfo.ShortName,
-            //         this.userInfo.DepartmentName,
-            //         null,
-            //         null,
-            //         0
-            //     ]
-            // }
-            // this.axios.post(`${this.api}/executeselect`,  {data: JSON.stringify(body)}).then(res => {
-            //     if(Array.isArray(res.data)) {
-            //         this.logtimeData = res.data
-            //     }
-            //     this.loading = false
-            // })
         },
         getUnionLogtime(dateRange) {
             this.loading = true
@@ -342,84 +325,25 @@ export default {
                     }
                 })
             } else {
-                this.updateORALogtime(this.userInfo)
+                this.$store.commit('CHANGE_USER_INFO', {})
+                this.$store.commit('CHANGE_USER_LOGGING', false)
+                this.$store.commit('CHANGE_SERVERDATETTIME', '')
             }
         },
-        // updateLogtimeData(value) {
-        //     //Compute duration
-        //     let timeInVal = this.moment.utc(value.TimeIn)
-        //     let timeOutVal  = this.moment.utc(this.logtimeDateTime)
-        //     let timeLogOut = timeOutVal.format('YYYY-MM-DD HH:mm:ss')
-        //     if(this.moment(value.LogDateTime).format('YYYY-MM-DD') != timeOutVal.format('YYYY-MM-DD')) {
-        //         timeLogOut = `${this.moment(value.LogDateTime).format('YYYY-MM-DD')} ${this.moment(value.EndTime).format('HH:mm:ss')}`
-        //     }
-        //     let duration = this.calculateDates(timeOutVal, timeInVal)
-        //     let body = {
-        //         procedureName: 'Logtime.dbo.ProcInsertLogTimeData',
-        //         values: [
-        //             `LT${this.moment(value.LogDateTime).format('MMYYYY')}`, 
-        //             value.ShortName, 
-        //             value.IDCode,
-        //             value.EmployeeCode, 
-        //             value.LogDateTime,
-        //             value.TimeIn,
-        //             timeLogOut, //TimeOut
-        //             parseFloat(duration.hours.toFixed(2) - 1), //NoHrs
-        //             value.Undertime, 
-        //             value.Tardiness, 
-        //             value.Overtime, 
-        //             value.ND, 
-        //             value.Shift, 
-        //             value.SW1, 
-        //             1, 
-        //             value.UserAcct, 
-        //             value.UserAcctO, 
-        //             value.UserTime, 
-        //             value.UserTimeO, 
-        //             value.ManualRem, 
-        //             '121', //ManualRemO, 
-        //             value.ND1, 
-        //             value.ND2, 
-        //             value.NoHrs1, 
-        //             value.OTCode == 'RD' ? 'R' : 'O', // PayCode
-        //             value.DayOff,
-        //             value.OTCode,
-        //             value.Meal,
-        //             value.MealOCC,
-        //             value.PostOT,
-        //             value.Leave,
-        //             value.TransIn,
-        //             value.TransOut,
-        //             value.DepartmentCode,
-        //             value.SectionCode,
-        //             value.TeamCode,
-        //             value.DesignationCode,
-        //             1
-        //         ]
-        //     }
-        //     // console.log(body)
-        //     // Work From Home
-        //     if(value.LogType == 1 && !value.TimeOut) {
-        //         this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
-        //     }
-        //     this.$store.commit('CHANGE_USER_INFO', {})
-        //     this.$store.commit('CHANGE_USER_LOGGING', false)
-        //     this.$store.commit('CHANGE_SERVERDATETTIME', '')
-        //     this.$router.push("/")
-        // },
         updateORALogtime(value) {
             let dtToday = this.moment.utc(this.datenow)
+            let logDate = this.moment.utc(value.LOGDATE).format('YYYY-MM-DD')
             let cutOffValues = this.getCutOffValues(value.LOGDATE, value.EMPLCODE)
-            let totalHours = this.computeTotalHours(value, `${value.LOGDATE} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
-            let totalUndertime = this.computeUndertime(value, `${value.LOGDATE} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
+            let totalHours = this.computeTotalHours(value, `${logDate} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
+            let totalUndertime = this.computeUndertime(value, `${logDate} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`)
             let body = {
                 server: this.serverName,
                 procedureName: 'HRIS.PROCUPDATELOGTIME',
                 values: [
                     value.EMPLCODE, 
-                    value.LOGDATE,
-                    `${value.LOGDATE} ${value.TIMEIN}`, // TIMEIN,
-                    `${value.LOGDATE} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`, // TIMEOUT
+                    logDate,
+                    `${logDate} ${value.TIMEIN}`, // TIMEIN,
+                    `${logDate} ${this.moment.utc(value.ENDTIME).format('HH:mm:ss')}`, // TIMEOUT
                     (totalHours - value.TARDINESS).toFixed(4), // NOHRS
                     totalUndertime, // UNDERTIME
                     value.TARDINESS,
@@ -438,15 +362,27 @@ export default {
             }
             if(!value.TIMEOUT && value.MANUALREM == '121') {
                 // console.log(body)
+                // this.saveOriginalLogtimeDetails(value)
                 this.axios.post(`${this.asd_sql}/ora_procedure.php`, {data: JSON.stringify(body)}).then(res => {
                     if(res.data == '1') {
-                        this.saveOriginalLogtimeDetails(value, `${dtToday.format('YYYY-MM-DD HH:mm:ss')}`)
+                        this.saveOriginalLogtimeDetails(value)
                         this.$store.commit('CHANGE_USER_INFO', {})
                         this.$store.commit('CHANGE_USER_LOGGING', false)
                         this.$store.commit('CHANGE_SERVERDATETTIME', '')
                         this.$router.push("/")
                     } else {
-                        console.log(res.data);
+                        // Catch Error
+                        let errData = {
+                            procedureName: 'Logtime.dbo.ProcErroLogs',
+                            values:  [
+                                res.data
+                            ]
+                        }
+                        this.axios.post(`${this.api}/execute`, {data: JSON.stringify(errData)})
+                        this.saveOriginalLogtimeDetails(value)
+                        this.$store.commit('CHANGE_USER_INFO', {})
+                        this.$store.commit('CHANGE_USER_LOGGING', false)
+                        this.$store.commit('CHANGE_SERVERDATETTIME', '')
                     }
                 })
             } else {
@@ -519,8 +455,8 @@ export default {
                 return 0
             }
         },
-        saveOriginalLogtimeDetails(rec, timeout) {
-            let dtToday = this.moment.utc(this.datenow)
+        saveOriginalLogtimeDetails(rec) {
+            let dtToday = this.moment.utc(this.logtimeDateTime)
             let totalHours = this.computeTotalHours(rec, `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(rec.ENDTIME).format('HH:mm:ss')}`)
             let totalUndertime = this.computeUndertime(rec, `${dtToday.format('YYYY-MM-DD')} ${this.moment.utc(rec.ENDTIME).format('HH:mm:ss')}`)
             let body = {
@@ -530,7 +466,7 @@ export default {
                     rec.LOGDATE, 
                     rec.EMPLCODE,
                     `${dtToday.format('YYYY-MM-DD')} ${rec.TIMEIN}`, 
-                    timeout,
+                    dtToday.format('YYYY-MM-DD HH:mm:ss'),
                     (totalHours - rec.TARDINESS).toFixed(4), // NOHRS
                     totalUndertime,
                     rec.TARDINESS,
@@ -539,6 +475,7 @@ export default {
                     1   
                 ]
             }
+            // console.log(body)
             this.axios.post(`${this.api}/execute`, {data: JSON.stringify(body)})
         }
     },
